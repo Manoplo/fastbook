@@ -75,6 +75,10 @@
   color: var(--fb-on-surface-variant);
 }
 
+.booking--with-continue-bar .booking__main {
+  padding-bottom: 9rem;
+}
+
 .booking__body {
   display: grid;
   grid-template-columns: 1fr;
@@ -82,8 +86,13 @@
   align-items: start;
 }
 
+.booking__body--step-2 {
+  grid-template-columns: 1fr;
+  max-width: 48rem;
+}
+
 @media (min-width: 1024px) {
-  .booking__body {
+  .booking__body:not(.booking__body--step-2) {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: 2rem;
   }
