@@ -1,5 +1,5 @@
 ---
-description: Contexto y convenciones del proyecto Fastbook
+description: Contexto, arquitectura y convenciones de Fastbook
 alwaysApply: true
 ---
 
@@ -13,21 +13,48 @@ App multitenant de reserva de citas. Tier gratuito + features premium.
 - Routing: React Router
 - Server state: TanStack Query
 - Client state: Zustand
-- UI: pantallas diseñadas con Google Stitch (MCP `user-stitch`)
+- Styles: CSS (kebab-case); tipografías con [Fontsource](https://lenguajecss.com/css/cargar-tipografias/tipografias-fontsource/)
+- Tests: Vitest + Testing Library (jsdom)
+- UI: Google Stitch (MCP `user-stitch`)
 - Backend/BBDD: Supabase (MCP de Supabase)
 
-## Alcance actual (MVP simple)
+## Alcance actual (MVP)
 
-Flujo web para seleccionar día, hora y servicio, y apuntarse a una cita. Sin overengineering.
+Flujo web: seleccionar día, hora y servicio, y apuntarse. Sin overengineering.
+
+## Arquitectura FE (`src/`)
+
+| Carpeta | Rol |
+|---|---|
+| `pages/` | Páginas ligadas a una ruta |
+| `components/` | Componentes reutilizables en toda la app |
+| `widgets/` | Features: composición de componentes en una unidad |
+
+### Naming
+
+- Siempre **kebab-case** para carpetas, componentes y archivos CSS.
+- Preferir `type` sobre `interface`. Usar `interface` solo para herencia.
+
+### Estructura de un widget (igual idea en components)
+
+```
+widgets/nombre-del-widget/
+  nombre-del-widget.tsx
+  nombre-del-widget.css
+  nombre-del-widget.types.ts   # types/enums solo del widget
+  nombre-del-widget.utils.ts   # utils locales
+  nombre-del-widget.test.tsx   # tests colocalizados
+  sub-componente/              # solo si es privado del widget
+    ...misma convención
+```
 
 ## Instrucciones para el agente
 
 - Responder en español.
 - No generar código de pantallas ni BE hasta que se pida explícitamente.
-- Usar Stitch MCP para diseño de pantallas FE antes de implementar UI.
-- Usar Supabase MCP para esquema, políticas y operaciones de BBDD.
-- Mantener el diseño multitenant desde el inicio (aislar datos por tenant).
-- Preferir lo simple: gratis primero; premium solo cuando toque.
-- Seguir `fastbook-roadmap.md` como fuente de verdad del plan.
-- No añadir dependencias sin pedirlo.
-- Commits solo si el usuario lo pide.
+- Usar Stitch MCP antes de implementar UI; Supabase MCP para BBDD.
+- Multitenant desde el inicio. Simple primero; premium cuando toque.
+- Seguir `fastbook-roadmap.md`. No añadir dependencias sin pedirlo. Commits solo si se piden.
+- Tipografías: instalar/cargar con Fontsource (`@fontsource/` o `@fontsource-variable/`).
+- Tras implementar una feature: ejecutar `pnpm verify` y el check de types de TypeScript (`tsc -b`).
+- Añadir tests donde tenga sentido (casos de uso críticos). No tests basura de UI (p. ej. “¿está el botón en el documento?”).

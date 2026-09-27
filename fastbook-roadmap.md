@@ -9,6 +9,8 @@ Aplicación **multitenant** de reserva de citas, con plan **gratuito** y **featu
 - [x] Proyecto React + Vite + TypeScript
 - [x] Dependencias FE: TanStack Query, React Router, Zustand
 - [x] Reglas del agente Cursor (`.cursor/rules/`)
+- [x] Vitest + Testing Library (tests unitarios)
+- [x] CI: workflow `verify` (lint + tests en push)
 - [ ] Enganche con MCP Google Stitch (diseño de pantallas)
 - [ ] Enganche con MCP Supabase (BBDD / BE)
 
@@ -34,3 +36,4 @@ Sin paneles avanzados, pagos ni lógica premium todavía. Multitenant desde el m
 - FE: Stitch → implementación React.
 - BE: Supabase (tablas, RLS, clientes).
 - Stack FE ya instalado: `@tanstack/react-query`, `react-router-dom`, `zustand`.
+- Tests: `pnpm test` (watch) / `pnpm test:run` (CI). Archivos `*.test.ts(x)` / `*.spec.ts(x)` en `src/`.
