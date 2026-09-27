@@ -9,7 +9,7 @@ App multitenant de reserva de citas. Tier gratuito + features premium.
 
 ## Stack
 
-- Frontend: React + Vite + TypeScript
+- Frontend: React + Vite + TypeScript (**React Compiler** activo)
 - Routing: React Router
 - Server state: TanStack Query
 - Client state: Zustand
@@ -35,6 +35,12 @@ Flujo web: seleccionar día, hora y servicio, y apuntarse. Sin overengineering.
 - Siempre **kebab-case** para carpetas, componentes y archivos CSS.
 - Preferir `type` sobre `interface`. Usar `interface` solo para herencia.
 
+### React Compiler
+
+- El proyecto usa React Compiler (`reactCompilerPreset` en Vite).
+- **No** usar `useMemo` / `useCallback` de forma preventiva: el compiler memoiza automáticamente.
+- Solo usarlos si hay un caso medido y justificado (muy raro).
+
 ### Estructura de un widget (igual idea en components)
 
 ```
@@ -58,3 +64,4 @@ widgets/nombre-del-widget/
 - Tipografías: instalar/cargar con Fontsource (`@fontsource/` o `@fontsource-variable/`).
 - Tras implementar una feature: ejecutar `pnpm verify` y el check de types de TypeScript (`tsc -b`).
 - Añadir tests donde tenga sentido (casos de uso críticos). No tests basura de UI (p. ej. “¿está el botón en el documento?”).
+- No regar el código con `useMemo`/`useCallback`; confiar en React Compiler.

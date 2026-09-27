@@ -1,0 +1,33 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+.home__title {
+  font-size: 30px;
+  line-height: 38px;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  color: var(--fb-on-surface);
+}
+
+.home__text,
+.home__hint {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--fb-on-surface-variant);
+}
+
+.home__link {
+  color: var(--fb-primary);
+  font-weight: 600;
+}
+
+.home__link:hover {
+  text-decoration: underline;
+}
