@@ -24,6 +24,14 @@ Interfaz web que permita:
 3. Seleccionar una **hora**
 4. **Apuntarse** a esa cita
 
+Progreso UI (rama `feature/main-page`):
+
+- [x] Ruta `/:tenantSlug` con hero + logo + calendario funcional (`components/calendar`)
+- [ ] Franjas horarias
+- [ ] Listado de servicios (seed Supabase)
+- [ ] Confirmación / datos de contacto
+- [ ] Formulario de alta en `/`
+
 Sin paneles avanzados, pagos ni lógica premium todavía. Multitenant desde el modelo de datos (cada negocio/tenant con sus servicios y slots).
 
 ## Esquema de datos (capa gratuita)

@@ -1,0 +1,128 @@
+.booking {
+  --booking-header-height: 5rem;
+  min-height: 100svh;
+  background: var(--fb-background);
+}
+
+.booking__header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--booking-header-height);
+  background: color-mix(in srgb, var(--fb-surface) 90%, transparent);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid color-mix(in srgb, var(--fb-surface-container) 60%, transparent);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.02);
+}
+
+.booking__header-inner {
+  display: flex;
+  align-items: center;
+  max-width: 80rem;
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 1.5rem;
+}
+
+.booking__main {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+}
+
+.booking__hero {
+  position: sticky;
+  top: var(--booking-header-height);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 -1.5rem 2rem;
+  padding: 1.25rem 1.5rem 1.25rem;
+  background: color-mix(in srgb, var(--fb-background) 92%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 16px -12px rgba(11, 28, 48, 0.18);
+}
+
+@media (min-width: 768px) {
+  .booking__hero {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+}
+
+.booking__hero-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.booking__title {
+  font-size: 36px;
+  line-height: 44px;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  color: var(--fb-on-surface);
+}
+
+.booking__subtitle {
+  margin-top: 0.375rem;
+  max-width: 40rem;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: -0.005em;
+  color: var(--fb-on-surface-variant);
+}
+
+.booking__body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .booking__body {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 2rem;
+  }
+}
+
+.booking__schedule,
+.booking__services-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  min-width: 0;
+}
+
+.booking__status {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--fb-on-surface-variant);
+}
+
+.booking__status--error {
+  color: var(--fb-on-surface);
+}
+
+@media (max-width: 768px) {
+  .booking {
+    --booking-header-height: 4rem;
+  }
+
+  .booking__title {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .booking__main {
+    padding: 0 1rem 3rem;
+  }
+
+  .booking__hero {
+    margin: 0 -1rem 1.5rem;
+    padding: 1rem;
+  }
+}

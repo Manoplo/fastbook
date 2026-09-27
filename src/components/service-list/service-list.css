@@ -1,0 +1,299 @@
+.service-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.75rem;
+  border-radius: 1rem;
+  background: var(--fb-surface-container-lowest);
+  border: 1px solid color-mix(in srgb, var(--fb-surface-container) 40%, transparent);
+  box-shadow: var(--fb-shadow-sm);
+}
+
+.service-list__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .service-list__header {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.service-list__eyebrow {
+  display: block;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--fb-primary);
+}
+
+.service-list__title {
+  margin-top: 0.125rem;
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+  color: var(--fb-on-surface);
+  text-transform: uppercase;
+}
+
+.service-list__subtitle {
+  margin-top: 0.25rem;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--fb-on-surface-variant);
+}
+
+.service-list__count {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: var(--fb-surface-container-high);
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  color: var(--fb-on-surface);
+  align-self: flex-start;
+}
+
+.service-list__empty {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--fb-on-surface-variant);
+}
+
+.service-list__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.service-list__card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--fb-surface-container) 60%, transparent);
+  border-radius: 1rem;
+  background: var(--fb-surface-container-lowest);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.service-list__card:hover:not(.service-list__card--selected) {
+  background: var(--fb-surface-container-low);
+}
+
+.service-list__card--selected {
+  background: var(--fb-surface-container-low);
+  border-color: color-mix(in srgb, var(--fb-primary) 20%, transparent);
+  box-shadow: var(--fb-shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .service-list__card {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.service-list__card-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.service-list__thumb {
+  position: relative;
+  width: 5rem;
+  height: 5rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: var(--fb-surface-container);
+}
+
+.service-list__thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.service-list__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.service-list__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.service-list__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fb-primary) 10%, transparent);
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  color: var(--fb-primary);
+}
+
+.service-list__card:not(.service-list__card--selected) .service-list__tag {
+  background: var(--fb-surface-container-high);
+  color: var(--fb-on-surface-variant);
+}
+
+.service-list__name {
+  font-size: 18px;
+  line-height: 26px;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  color: var(--fb-on-surface);
+}
+
+.service-list__description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--fb-on-surface-variant);
+}
+
+.service-list__meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.25rem;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+  color: var(--fb-on-surface-variant);
+}
+
+.service-list__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.service-list__meta-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--fb-primary);
+}
+
+.service-list__card:not(.service-list__card--selected) .service-list__meta-icon {
+  color: var(--fb-on-surface-variant);
+}
+
+.service-list__aside {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .service-list__aside {
+    flex-direction: column;
+    align-items: flex-end;
+    width: auto;
+    padding-top: 0;
+  }
+}
+
+.service-list__price-block {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .service-list__price-block {
+    align-items: flex-end;
+  }
+}
+
+.service-list__price-label {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--fb-on-surface-variant);
+}
+
+.service-list__price {
+  font-size: 30px;
+  line-height: 38px;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  color: var(--fb-on-surface);
+}
+
+.service-list__price--selected {
+  color: var(--fb-primary);
+}
+
+.service-list__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--fb-surface-container);
+  color: var(--fb-on-surface-variant);
+  flex-shrink: 0;
+}
+
+.service-list__check--selected {
+  background: var(--fb-primary);
+  color: var(--fb-on-primary);
+  box-shadow: var(--fb-shadow-sm);
+}
+
+.service-list__check-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: var(--fb-surface-container-high);
+}
+
+.service-list__check-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+@media (max-width: 480px) {
+  .service-list {
+    padding: 1.25rem;
+  }
+}

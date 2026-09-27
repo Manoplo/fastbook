@@ -1,0 +1,112 @@
+.booking-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.75rem;
+  border-radius: 1rem;
+  background: var(--fb-surface-container-lowest);
+  border: 1px solid color-mix(in srgb, var(--fb-surface-container) 40%, transparent);
+  box-shadow: var(--fb-shadow-sm);
+}
+
+.booking-notes__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.booking-notes__title {
+  font-size: 18px;
+  line-height: 26px;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  color: var(--fb-on-surface);
+}
+
+.booking-notes__optional {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: var(--fb-surface-container-high);
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  color: var(--fb-on-surface-variant);
+  flex-shrink: 0;
+}
+
+.booking-notes__textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  background: var(--fb-surface-container-low);
+  color: var(--fb-on-surface);
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  resize: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.booking-notes__textarea::placeholder {
+  color: color-mix(in srgb, var(--fb-on-surface-variant) 60%, transparent);
+}
+
+.booking-notes__textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--fb-primary) 30%, transparent);
+  background: var(--fb-surface-container);
+}
+
+.booking-notes__badges {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.5rem 0 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .booking-notes__badges {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.booking-notes__badge {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.75rem;
+  background: var(--fb-surface-container-low);
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  color: var(--fb-on-surface);
+}
+
+.booking-notes__badge-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.booking-notes__badge--tertiary .booking-notes__badge-icon {
+  color: var(--fb-tertiary);
+}
+
+.booking-notes__badge--primary .booking-notes__badge-icon {
+  color: var(--fb-primary);
+}
+
+@media (max-width: 480px) {
+  .booking-notes {
+    padding: 1.25rem;
+  }
+}
