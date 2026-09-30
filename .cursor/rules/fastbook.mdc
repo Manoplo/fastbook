@@ -24,11 +24,11 @@ Flujo web: seleccionar día, hora y servicio, y apuntarse. Sin overengineering.
 
 ## Arquitectura FE (`src/`)
 
-| Carpeta | Rol |
-|---|---|
-| `pages/` | Páginas ligadas a una ruta |
-| `components/` | Componentes reutilizables en toda la app |
-| `widgets/` | Features: composición de componentes en una unidad |
+| Carpeta       | Rol                                                |
+| ------------- | -------------------------------------------------- |
+| `pages/`      | Páginas ligadas a una ruta                         |
+| `components/` | Componentes reutilizables en toda la app           |
+| `widgets/`    | Features: composición de componentes en una unidad |
 
 ### Naming
 
@@ -65,3 +65,4 @@ widgets/nombre-del-widget/
 - Tras implementar una feature: ejecutar `pnpm verify` y el check de types de TypeScript (`tsc -b`).
 - Añadir tests donde tenga sentido (casos de uso críticos). No tests basura de UI (p. ej. “¿está el botón en el documento?”).
 - No regar el código con `useMemo`/`useCallback`; confiar en React Compiler.
+- Preferiblemente, los componentes irán en su propia carpeta. No meter Item dentro del mismo archivo donde está ItemList -> Item es un subcomponente de ItemList.

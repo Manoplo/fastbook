@@ -240,9 +240,24 @@
   color: var(--fb-on-surface-variant);
 }
 
-.customer-details-form__helper-text {
-  padding-left: 0.25rem;
+.customer-details-form__input--error,
+.customer-details-form__consent--error .customer-details-form__checkbox {
+  border-color: var(--fb-error);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fb-error) 35%, transparent);
 }
+
+.customer-details-form__error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--fb-error);
+}
+
+.customer-details-form__consent--error {
+  color: var(--fb-error);
+}
+
 
 .customer-details-form__divider {
   height: 1px;

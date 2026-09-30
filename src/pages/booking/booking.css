@@ -88,13 +88,19 @@
 
 .booking__body--step-2 {
   grid-template-columns: 1fr;
-  max-width: 48rem;
+  max-width: none;
 }
 
 @media (min-width: 1024px) {
   .booking__body:not(.booking__body--step-2) {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: 2rem;
+  }
+
+  .booking__body--step-2 {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 2rem;
+    align-items: start;
   }
 }
 

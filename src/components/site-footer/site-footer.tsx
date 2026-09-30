@@ -1,43 +1,13 @@
+import { LockIcon } from '../icons/lock-icon'
+import { QrCodeIcon } from '../icons/qr-code-icon'
+import { VerifiedIcon } from '../icons/verified-icon'
 import './site-footer.css'
-
-function VerifiedUserIcon() {
-  return (
-    <svg className="site-footer__badge-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"
-      />
-    </svg>
-  )
-}
-
-function LockIcon() {
-  return (
-    <svg className="site-footer__badge-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"
-      />
-    </svg>
-  )
-}
-
-function QrCodeIcon() {
-  return (
-    <svg className="site-footer__badge-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13 2h-2v2h2v-2zm2-2h-6v6h2v-2h2v2h2v-6zm-4 0h-2v2h2v-2z"
-      />
-    </svg>
-  )
-}
 
 const TRUST_ITEMS = [
   {
     id: 'guaranteed',
     label: 'Reserva Garantizada',
-    icon: VerifiedUserIcon,
+    icon: VerifiedIcon,
     tone: 'tertiary' as const,
   },
   {
@@ -85,7 +55,7 @@ export function SiteFooter() {
                 key={item.id}
                 className={`site-footer__trust-item site-footer__trust-item--${item.tone}`}
               >
-                <Icon />
+                <Icon className="site-footer__badge-icon" />
                 <span>{item.label}</span>
               </li>
             )

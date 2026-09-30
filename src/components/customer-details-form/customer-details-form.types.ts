@@ -13,13 +13,19 @@ export type CustomerDetailsFormValues = {
   email: string
   phoneCountryCode: PhoneCountryCode
   phone: string
-  notes: string
   privacyAccepted: boolean
   smsReminders: boolean
 }
 
 export type CustomerDetailsFormProps = {
-  values: CustomerDetailsFormValues
   tenantName: string
-  onChange: (patch: Partial<CustomerDetailsFormValues>) => void
+}
+
+export const CUSTOMER_DETAILS_DEFAULT_VALUES: CustomerDetailsFormValues = {
+  fullName: '',
+  email: '',
+  phoneCountryCode: '+34',
+  phone: '',
+  privacyAccepted: false,
+  smsReminders: false,
 }
