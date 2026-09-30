@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { ChevronLeftIcon } from '../icons/chevron-left-icon'
+import { ChevronRightIcon } from '../icons/chevron-right-icon'
 import type { CalendarProps } from './calendar.types'
 import {
   WEEKDAY_LABELS,
@@ -10,28 +12,6 @@ import {
   toDateKey,
 } from './calendar.utils'
 import './calendar.css'
-
-function ChevronLeftIcon() {
-  return (
-    <svg className="calendar__nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"
-      />
-    </svg>
-  )
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg className="calendar__nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
-      />
-    </svg>
-  )
-}
 
 export function Calendar({
   value = null,
@@ -87,7 +67,7 @@ export function Calendar({
             disabled={!canGoPrev}
             onClick={() => setViewMonth((month) => addMonths(month, -1))}
           >
-            <ChevronLeftIcon />
+            <ChevronLeftIcon className="calendar__nav-icon" />
           </button>
           <span className="calendar__month-label" aria-live="polite">
             {formatMonthYear(viewMonth)}
@@ -98,7 +78,7 @@ export function Calendar({
             aria-label="Mes siguiente"
             onClick={() => setViewMonth((month) => addMonths(month, 1))}
           >
-            <ChevronRightIcon />
+            <ChevronRightIcon className="calendar__nav-icon" />
           </button>
         </div>
       </div>
