@@ -3,7 +3,7 @@ import {
   addMinutesToTime,
   formatCustomerPhone,
   toPostgresTime,
-} from './create-booking'
+} from './create-booking.utils'
 
 describe('create-booking utils', () => {
   it('suma minutos a una hora HH:mm', () => {
