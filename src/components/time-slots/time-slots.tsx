@@ -1,4 +1,5 @@
-import { CheckIcon } from '../icons/check-icon'
+import classNames from 'classnames'
+import { CheckIcon } from '@components/icons/check-icon'
 import type { TimeSlotsProps } from './time-slots.types'
 import { buildSlotsForDay } from './time-slots.utils'
 import './time-slots.css'
@@ -59,12 +60,9 @@ export function TimeSlots({
                     <button
                       key={slot.startTime}
                       type="button"
-                      className={[
-                        'time-slots__slot',
-                        selected ? 'time-slots__slot--selected' : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
+                      className={classNames('time-slots__slot', {
+                        'time-slots__slot--selected': selected,
+                      })}
                       aria-pressed={selected}
                       onClick={() => handleSelect(slot.startTime)}
                     >
@@ -91,12 +89,9 @@ export function TimeSlots({
                     <button
                       key={slot.startTime}
                       type="button"
-                      className={[
-                        'time-slots__slot',
-                        selected ? 'time-slots__slot--selected' : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
+                      className={classNames('time-slots__slot', {
+                        'time-slots__slot--selected': selected,
+                      })}
                       aria-pressed={selected}
                       onClick={() => handleSelect(slot.startTime)}
                     >

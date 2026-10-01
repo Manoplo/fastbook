@@ -1,36 +1,37 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
+import classNames from 'classnames'
 import { useEffect, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useParams } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
-import { BookingConfirmation } from '../../components/booking-confirmation/booking-confirmation'
-import { BookingContinueBar } from '../../components/booking-continue-bar/booking-continue-bar'
-import { BookingNotes } from '../../components/booking-notes/booking-notes'
-import { BookingSteps } from '../../components/booking-steps/booking-steps'
-import { BookingSummaryCard } from '../../components/booking-summary-card/booking-summary-card'
-import { Calendar } from '../../components/calendar/calendar'
-import { toDateKey, startOfDay } from '../../components/calendar/calendar.utils'
-import { CustomerDetailsForm } from '../../components/customer-details-form/customer-details-form'
+import { BookingConfirmation } from '@components/booking-confirmation/booking-confirmation'
+import { BookingContinueBar } from '@components/booking-continue-bar/booking-continue-bar'
+import { BookingNotes } from '@components/booking-notes/booking-notes'
+import { BookingSteps } from '@components/booking-steps/booking-steps'
+import { BookingSummaryCard } from '@components/booking-summary-card/booking-summary-card'
+import { Calendar } from '@components/calendar/calendar'
+import { toDateKey, startOfDay } from '@components/calendar/calendar.utils'
+import { CustomerDetailsForm } from '@components/customer-details-form/customer-details-form'
 import {
   CUSTOMER_DETAILS_DEFAULT_VALUES,
   type CustomerDetailsFormValues,
-} from '../../components/customer-details-form/customer-details-form.types'
-import { FastbookLogo } from '../../components/fastbook-logo/fastbook-logo'
-import { ServiceList } from '../../components/service-list/service-list'
-import { SiteFooter } from '../../components/site-footer/site-footer'
-import { TimeSlots } from '../../components/time-slots/time-slots'
-import { buildAvailableDates } from '../../components/time-slots/time-slots.utils'
+} from '@components/customer-details-form/customer-details-form.types'
+import { FastbookLogo } from '@components/fastbook-logo/fastbook-logo'
+import { ServiceList } from '@components/service-list/service-list'
+import { SiteFooter } from '@components/site-footer/site-footer'
+import { TimeSlots } from '@components/time-slots/time-slots'
+import { buildAvailableDates } from '@components/time-slots/time-slots.utils'
 import {
   BookingConflictError,
   createBooking,
   formatCustomerPhone,
-} from '../../lib/create-booking'
+} from '@src/lib/create-booking'
 import {
   collectAvailabilityWindows,
   getTenantBySlug,
   resolveSlotDurationMinutes,
-} from '../../lib/get-tenant-by-slug'
-import { useBookingSelectionStore } from '../../stores/booking-selection-store'
+} from '@src/lib/get-tenant-by-slug'
+import { useBookingSelectionStore } from '@src/stores/booking-selection-store'
 import './booking.css'
 
 const CUSTOMER_FORM_ID = 'customer-details-form'
@@ -206,9 +207,9 @@ export function BookingPage() {
 
   return (
     <div
-      className={['booking', showContinueBar ? 'booking--with-continue-bar' : '']
-        .filter(Boolean)
-        .join(' ')}
+      className={classNames('booking', {
+        'booking--with-continue-bar': showContinueBar,
+      })}
     >
       <header className="booking__header">
         <div className="booking__header-inner">

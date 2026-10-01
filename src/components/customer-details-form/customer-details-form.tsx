@@ -1,17 +1,18 @@
+import classNames from 'classnames'
 import { useFormContext } from 'react-hook-form'
-import { hasSaasImplementation } from '../../lib/feature-flags'
+import { hasSaasImplementation } from '@src/lib/feature-flags'
 import {
   PHONE_COUNTRY_CODES,
   type CustomerDetailsFormProps,
   type CustomerDetailsFormValues,
 } from './customer-details-form.types'
-import { AccountCircleIcon } from '../icons/account-circle-icon'
-import { InfoIcon } from '../icons/info-icon'
-import { MailIcon } from '../icons/mail-icon'
-import { PersonOutlineIcon } from '../icons/person-outline-icon'
-import { SendIcon } from '../icons/send-icon'
-import { ShieldIcon } from '../icons/shield-icon'
-import { SmartphoneIcon } from '../icons/smartphone-icon'
+import { AccountCircleIcon } from '@components/icons/account-circle-icon'
+import { InfoIcon } from '@components/icons/info-icon'
+import { MailIcon } from '@components/icons/mail-icon'
+import { PersonOutlineIcon } from '@components/icons/person-outline-icon'
+import { SendIcon } from '@components/icons/send-icon'
+import { ShieldIcon } from '@components/icons/shield-icon'
+import { SmartphoneIcon } from '@components/icons/smartphone-icon'
 import './customer-details-form.css'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -51,12 +52,9 @@ export function CustomerDetailsForm({ tenantName }: CustomerDetailsFormProps) {
             <AccountCircleIcon className="customer-details-form__field-icon" />
             <input
               id="customer-full-name"
-              className={[
-                'customer-details-form__input',
-                errors.fullName ? 'customer-details-form__input--error' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
+              className={classNames('customer-details-form__input', {
+                'customer-details-form__input--error': errors.fullName,
+              })}
               type="text"
               autoComplete="name"
               placeholder="Elena Morales García"
@@ -93,12 +91,9 @@ export function CustomerDetailsForm({ tenantName }: CustomerDetailsFormProps) {
             <MailIcon className="customer-details-form__field-icon" />
             <input
               id="customer-email"
-              className={[
-                'customer-details-form__input',
-                errors.email ? 'customer-details-form__input--error' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
+              className={classNames('customer-details-form__input', {
+                'customer-details-form__input--error': errors.email,
+              })}
               type="email"
               autoComplete="email"
               placeholder="elena.morales@ejemplo.com"
@@ -172,12 +167,9 @@ export function CustomerDetailsForm({ tenantName }: CustomerDetailsFormProps) {
 
         <div className="customer-details-form__consents">
           <label
-            className={[
-              'customer-details-form__consent',
-              errors.privacyAccepted ? 'customer-details-form__consent--error' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
+            className={classNames('customer-details-form__consent', {
+              'customer-details-form__consent--error': errors.privacyAccepted,
+            })}
           >
             <input
               type="checkbox"

@@ -14,6 +14,7 @@ App multitenant de reserva de citas. Tier gratuito + features premium.
 - Server state: TanStack Query
 - Client state: Zustand
 - Styles: CSS (kebab-case); tipografías con [Fontsource](https://lenguajecss.com/css/cargar-tipografias/tipografias-fontsource/)
+- Estilos condicionales: librería `classnames` (`classNames(...)`). **No** usar `[...].filter(Boolean).join(' ')`.
 - Tests: Vitest + Testing Library (jsdom)
 - UI: Google Stitch (MCP `user-stitch`)
 - Backend/BBDD: Supabase (MCP de Supabase)
@@ -34,6 +35,14 @@ Flujo web: seleccionar día, hora y servicio, y apuntarse. Sin overengineering.
 
 - Siempre **kebab-case** para carpetas, componentes y archivos CSS.
 - Preferir `type` sobre `interface`. Usar `interface` solo para herencia.
+
+### Imports
+
+- Imports **dentro de la propia carpeta**: relativos (`./foo`, `./foo.types`).
+- Imports **fuera de la propia carpeta**: aliases, sin extensión (salvo assets):
+  - `@components/...` → `src/components/...` (p. ej. `@components/fastbook-logo/fastbook-logo`)
+  - `@src/...` → resto de `src/` (p. ej. `@src/providers/auth-session-provider`, `@src/lib/...`)
+- **No** usar `../../` para salir de la carpeta.
 
 ### React Compiler
 
@@ -64,5 +73,8 @@ widgets/nombre-del-widget/
 - Tipografías: instalar/cargar con Fontsource (`@fontsource/` o `@fontsource-variable/`).
 - Tras implementar una feature: ejecutar `pnpm verify` y el check de types de TypeScript (`tsc -b`).
 - Añadir tests donde tenga sentido (casos de uso críticos). No tests basura de UI (p. ej. “¿está el botón en el documento?”).
+- **Tests y Supabase:** CI no tiene `.env.local`. Nunca importar en un unit test un módulo que inicializa `supabase-client` (p. ej. `ensure-owned-tenant.ts`, `create-booking.ts`). Extraer lógica pura a `*.utils.ts` y testear eso (como `create-booking.utils.test.ts`). Si un test necesita el client, mockearlo; no depender de tokens reales. Red de seguridad: `.env.test` con stubs (sin secretos).
 - No regar el código con `useMemo`/`useCallback`; confiar en React Compiler.
+- Estilos condicionales con `classNames` (`classnames`); no usar `[...].filter(Boolean).join(' ')`.
+- Imports fuera de carpeta con aliases `@components/...` y `@src/...`; relativos solo dentro de la misma carpeta.
 - Preferiblemente, los componentes irán en su propia carpeta. No meter Item dentro del mismo archivo donde está ItemList -> Item es un subcomponente de ItemList.

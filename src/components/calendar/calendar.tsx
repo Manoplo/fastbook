@@ -1,6 +1,7 @@
+import classNames from 'classnames'
 import { useState } from 'react'
-import { ChevronLeftIcon } from '../icons/chevron-left-icon'
-import { ChevronRightIcon } from '../icons/chevron-right-icon'
+import { ChevronLeftIcon } from '@components/icons/chevron-left-icon'
+import { ChevronRightIcon } from '@components/icons/chevron-right-icon'
 import type { CalendarProps } from './calendar.types'
 import {
   WEEKDAY_LABELS,
@@ -95,14 +96,11 @@ export function Calendar({
         <div className="calendar__grid" role="grid" aria-label={formatMonthYear(viewMonth)}>
           {days.map((day) => {
             const selectable = day.isCurrentMonth && day.isAvailable && !day.isPast
-            const className = [
-              'calendar__day',
-              !day.isCurrentMonth ? 'calendar__day--outside' : '',
-              day.isPast || !day.isCurrentMonth ? 'calendar__day--disabled' : '',
-              day.isSelected ? 'calendar__day--selected' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')
+            const className = classNames('calendar__day', {
+              'calendar__day--outside': !day.isCurrentMonth,
+              'calendar__day--disabled': day.isPast || !day.isCurrentMonth,
+              'calendar__day--selected': day.isSelected,
+            })
 
             return (
               <button

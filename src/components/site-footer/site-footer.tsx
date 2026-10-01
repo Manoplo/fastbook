@@ -1,6 +1,6 @@
-import { LockIcon } from '../icons/lock-icon'
-import { QrCodeIcon } from '../icons/qr-code-icon'
-import { VerifiedIcon } from '../icons/verified-icon'
+import { LockIcon } from '@components/icons/lock-icon'
+import { QrCodeIcon } from '@components/icons/qr-code-icon'
+import { VerifiedIcon } from '@components/icons/verified-icon'
 import './site-footer.css'
 
 const TRUST_ITEMS = [

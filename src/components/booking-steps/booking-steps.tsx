@@ -1,4 +1,5 @@
-import { ArrowBackIcon } from "../icons/arrow-back-icon";
+import classNames from "classnames";
+import { ArrowBackIcon } from "@components/icons/arrow-back-icon";
 import { DEFAULT_BOOKING_STEPS } from "./booking-steps.constants";
 import type { BookingStepsProps } from "./booking-steps.types";
 import "./booking-steps.css";
@@ -22,14 +23,11 @@ export function BookingSteps({ steps = DEFAULT_BOOKING_STEPS, currentStep = 1, o
             const isComplete = step.id < currentStep;
             const isClickable = isComplete && Boolean(onStepSelect);
 
-            const className = [
-              "booking-steps__step",
-              isCurrent ? "booking-steps__step--current" : "",
-              isComplete ? "booking-steps__step--complete" : "",
-              isClickable ? "booking-steps__step--clickable" : "",
-            ]
-              .filter(Boolean)
-              .join(" ");
+            const className = classNames("booking-steps__step", {
+              "booking-steps__step--current": isCurrent,
+              "booking-steps__step--complete": isComplete,
+              "booking-steps__step--clickable": isClickable,
+            });
 
             const content = (
               <>

@@ -1,0 +1,6 @@
+.require-auth-loading {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  color: var(--fb-on-surface-variant);
+}
