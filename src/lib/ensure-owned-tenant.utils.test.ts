@@ -4,7 +4,7 @@ import {
   BUSINESS_NAME_META_KEY,
   BUSINESS_SLUG_META_KEY,
   readPendingBusinessProfile,
-} from './ensure-owned-tenant'
+} from './ensure-owned-tenant.utils'
 
 function userWithMeta(meta: Record<string, unknown>): User {
   return {

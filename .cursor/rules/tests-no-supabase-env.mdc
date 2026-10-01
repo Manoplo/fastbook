@@ -1,0 +1,24 @@
+---
+description: Unit tests no deben depender de .env / Supabase real
+globs: src/**/*.{test,spec}.{ts,tsx}
+alwaysApply: false
+---
+
+# Tests sin .env de Supabase
+
+CI no tiene `.env.local`. `supabase-client.ts` lanza si faltan `VITE_SUPABASE_*`.
+
+## Regla
+
+- Testear lógica pura desde `*.utils.ts` (u otros módulos sin side effects).
+- **No** importar módulos que hacen `import { supabase } from './supabase-client'` (p. ej. `ensure-owned-tenant.ts`, `create-booking.ts`, `sign-in-tenant.ts`).
+- Si hace falta el client: `vi.mock('@src/lib/supabase-client', …)` (o el path relativo equivalente).
+- No añadir secretos al pipeline: `.env.test` tiene stubs públicos para Vitest (`mode=test`).
+
+```ts
+// ❌ BAD — arrastra supabase-client y rompe CI
+import { readPendingBusinessProfile } from './ensure-owned-tenant'
+
+// ✅ GOOD
+import { readPendingBusinessProfile } from './ensure-owned-tenant.utils'
+```
