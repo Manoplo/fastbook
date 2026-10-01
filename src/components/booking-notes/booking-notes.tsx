@@ -1,6 +1,6 @@
-import { CheckCircleIcon } from '../icons/check-circle-icon'
-import { UpdateIcon } from '../icons/update-icon'
-import { VerifiedIcon } from '../icons/verified-icon'
+import { CheckCircleIcon } from '@components/icons/check-circle-icon'
+import { UpdateIcon } from '@components/icons/update-icon'
+import { VerifiedIcon } from '@components/icons/verified-icon'
 import type { BookingNotesProps } from './booking-notes.types'
 import './booking-notes.css'
 

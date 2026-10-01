@@ -1,9 +1,9 @@
-import { ArrowForwardIcon } from '../icons/arrow-forward-icon'
-import { EventAvailableIcon } from '../icons/event-available-icon'
+import { ArrowForwardIcon } from '@components/icons/arrow-forward-icon'
+import { EventAvailableIcon } from '@components/icons/event-available-icon'
 import {
   formatDurationMinutes,
   formatServicePrice,
-} from '../service-list/service-list.utils'
+} from '@components/service-list/service-list.utils'
 import type { BookingContinueBarProps } from './booking-continue-bar.types'
 import { formatContinueBarDate } from './booking-continue-bar.utils'
 import './booking-continue-bar.css'

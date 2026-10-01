@@ -1,5 +1,6 @@
-import { CheckIcon } from '../icons/check-icon'
-import { ScheduleIcon } from '../icons/schedule-icon'
+import classNames from 'classnames'
+import { CheckIcon } from '@components/icons/check-icon'
+import { ScheduleIcon } from '@components/icons/schedule-icon'
 import type { ServiceListItem, ServiceListProps } from './service-list.types'
 import {
   formatDurationMinutes,
@@ -23,13 +24,10 @@ function ServiceCard({
   return (
     <button
       type="button"
-      className={[
-        'service-list__card',
-        selected ? 'service-list__card--selected' : '',
-        !hasImage ? 'service-list__card--no-image' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      className={classNames('service-list__card', {
+        'service-list__card--selected': selected,
+        'service-list__card--no-image': !hasImage,
+      })}
       aria-pressed={selected}
       onClick={onSelect}
     >
@@ -74,24 +72,18 @@ function ServiceCard({
         <div className="service-list__price-block">
           <span className="service-list__price-label">Total</span>
           <span
-            className={[
-              'service-list__price',
-              selected ? 'service-list__price--selected' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
+            className={classNames('service-list__price', {
+              'service-list__price--selected': selected,
+            })}
           >
             {formatServicePrice(service.price)}
           </span>
         </div>
 
         <span
-          className={[
-            'service-list__check',
-            selected ? 'service-list__check--selected' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
+          className={classNames('service-list__check', {
+            'service-list__check--selected': selected,
+          })}
           aria-hidden="true"
         >
           {selected ? (

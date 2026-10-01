@@ -17,6 +17,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.103.2
         version: 5.103.2(react@19.3.0)
+      classnames:
+        specifier: ^2.5.1
+        version: 2.5.1
       react:
         specifier: ^19.2.8
         version: 19.3.0
@@ -659,6 +662,9 @@ packages:
   chai@6.2.2:
     resolution: {integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==}
     engines: {node: '>=18'}
+
+  classnames@2.5.1:
+    resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
@@ -1650,6 +1656,8 @@ snapshots:
   caniuse-lite@1.0.30001812: {}
 
   chai@6.2.2: {}
+
+  classnames@2.5.1: {}
 
   convert-source-map@2.0.0: {}
 

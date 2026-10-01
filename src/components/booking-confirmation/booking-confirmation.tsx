@@ -1,5 +1,5 @@
-import { CheckCircleIcon } from '../icons/check-circle-icon'
-import { formatSummaryDate, formatSummaryTimeLabel } from '../booking-summary-card/booking-summary-card.utils'
+import { CheckCircleIcon } from '@components/icons/check-circle-icon'
+import { formatSummaryDate, formatSummaryTimeLabel } from '@components/booking-summary-card/booking-summary-card.utils'
 import type { BookingConfirmationProps } from './booking-confirmation.types'
 import './booking-confirmation.css'
 
