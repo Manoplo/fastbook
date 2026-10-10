@@ -1,3 +1,4 @@
+import { getEmailConfirmRedirectTo } from './enterprise-auth-paths'
 import { supabase } from './supabase-client'
 import {
   BUSINESS_NAME_META_KEY,
@@ -8,6 +9,7 @@ import type { OwnedTenant } from './get-tenant-by-owner'
 import {
   PASSWORD_REQUIREMENTS_MESSAGE,
   TenantAuthError,
+  isSignUpEmailAlreadyRegistered,
   isValidEmail,
   isValidPassword,
   isValidTenantSlug,
@@ -53,10 +55,25 @@ export async function signUpTenant(
     )
   }
 
+  const { data: existingSlug, error: slugLookupError } = await supabase
+    .from('tenants')
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (slugLookupError) {
+    throw new TenantAuthError(mapAuthErrorMessage(slugLookupError.message))
+  }
+
+  if (existingSlug) {
+    throw new TenantAuthError('slug_taken')
+  }
+
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: getEmailConfirmRedirectTo(),
       data: {
         [BUSINESS_NAME_META_KEY]: name,
         [BUSINESS_SLUG_META_KEY]: slug,
@@ -71,6 +88,11 @@ export async function signUpTenant(
   const user = authData.user
   if (!user) {
     throw new TenantAuthError('unknown')
+  }
+
+  // Email ya registrado: respuesta ofuscada (sin identidades), no es un alta real.
+  if (isSignUpEmailAlreadyRegistered(user)) {
+    throw new TenantAuthError('email_taken')
   }
 
   // Sin sesión (confirm email activo): el tenant se crea en el primer login.

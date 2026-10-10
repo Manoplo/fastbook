@@ -98,6 +98,17 @@ export type AuthErrorCode =
   | 'needs_business_setup'
   | 'unknown'
 
+/**
+ * Supabase (confirm email + anti-enumeración) no lanza error si el email ya
+ * existe: devuelve un user ofuscado con `identities: []`. Tratarlo como email
+ * ocupado.
+ */
+export function isSignUpEmailAlreadyRegistered(
+  user: { identities?: Array<unknown> | null } | null | undefined,
+): boolean {
+  return Array.isArray(user?.identities) && user.identities.length === 0
+}
+
 export function mapAuthErrorMessage(message: string | undefined): AuthErrorCode {
   const normalized = (message ?? '').toLowerCase()
 
@@ -111,7 +122,8 @@ export function mapAuthErrorMessage(message: string | undefined): AuthErrorCode 
   if (
     normalized.includes('user already registered') ||
     normalized.includes('already been registered') ||
-    normalized.includes('email address is already registered')
+    normalized.includes('email address is already registered') ||
+    normalized.includes('email already exists')
   ) {
     return 'email_taken'
   }
