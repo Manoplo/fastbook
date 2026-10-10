@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuthSession } from "@src/hooks/use-auth-session";
+import { ENTERPRISE_LOGIN_PATH } from "@src/lib/enterprise-auth-paths";
 import "./require-auth.css";
 
 type RequireAuthProps = {
@@ -19,7 +20,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
   }
 
   if (!session) {
-    return <Navigate to="/enterprise/login" replace />;
+    return <Navigate to={ENTERPRISE_LOGIN_PATH} replace />;
   }
 
   return children;

@@ -28,6 +28,20 @@
   gap: 1.5rem;
 }
 
+.enterprise-login__form-inner--bootstrap {
+  gap: 2rem;
+}
+
+.enterprise-login__bootstrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  font-size: 0.975rem;
+  font-weight: 600;
+  color: var(--fb-on-surface-variant);
+}
+
 .enterprise-login__brand {
   display: inline-flex;
   width: fit-content;

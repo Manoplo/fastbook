@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   authErrorMessage,
   getPasswordStrength,
+  isSignUpEmailAlreadyRegistered,
   isValidEmail,
   isValidPassword,
   isValidTenantSlug,
@@ -39,11 +40,23 @@ describe('tenant-auth.utils', () => {
     expect(passwordStrengthLabel('strong')).toBe('Fuerte')
   })
 
+  it('detecta signup ofuscado por email ya registrado', () => {
+    expect(isSignUpEmailAlreadyRegistered({ identities: [] })).toBe(true)
+    expect(
+      isSignUpEmailAlreadyRegistered({
+        identities: [{ provider: 'email' }],
+      }),
+    ).toBe(false)
+    expect(isSignUpEmailAlreadyRegistered(null)).toBe(false)
+    expect(isSignUpEmailAlreadyRegistered({ identities: null })).toBe(false)
+  })
+
   it('mapea mensajes de Auth/Postgres a códigos', () => {
     expect(mapAuthErrorMessage('Invalid login credentials')).toBe(
       'invalid_credentials',
     )
     expect(mapAuthErrorMessage('User already registered')).toBe('email_taken')
+    expect(mapAuthErrorMessage('Email already exists')).toBe('email_taken')
     expect(mapAuthErrorMessage('duplicate key value violates unique constraint "tenants_slug_key"')).toBe(
       'slug_taken',
     )

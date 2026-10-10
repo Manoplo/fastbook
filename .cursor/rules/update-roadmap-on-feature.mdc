@@ -1,0 +1,15 @@
+---
+description: Actualizar roadmap al cerrar features largas
+alwaysApply: true
+---
+
+# Roadmap al cerrar features
+
+Cuando una tarea larga termine (feature multi-archivo, PR mergeable, flujo end-to-end):
+
+1. Actualizar `fastbook-roadmap.md` en el mismo entregable.
+2. Marcar checkboxes hechos, anotar migraciones/rutas/libs nuevas relevantes.
+3. Dejar una sección **siguiente** accionable (no vaguedades).
+4. No sustituir el roadmap por un `handoff.md` ad hoc salvo que el usuario lo pida.
+
+El roadmap es el briefing del próximo agente.

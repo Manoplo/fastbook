@@ -1,0 +1,87 @@
+.enterprise-check-email {
+  display: flex;
+  min-height: 100svh;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(59, 73, 223, 0.12), transparent),
+    linear-gradient(180deg, var(--fb-surface) 0%, var(--fb-background) 100%);
+}
+
+.enterprise-check-email__panel {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.enterprise-check-email__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.enterprise-check-email__brand {
+  display: inline-flex;
+  width: fit-content;
+}
+
+.enterprise-check-email__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fb-tertiary) 12%, transparent);
+  color: var(--fb-tertiary);
+}
+
+.enterprise-check-email__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.enterprise-check-email__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.enterprise-check-email__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 2.5vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  color: var(--fb-on-surface);
+}
+
+.enterprise-check-email__subtitle {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--fb-on-surface-variant);
+}
+
+.enterprise-check-email__hint {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.7rem;
+  background: var(--fb-surface-container-low);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--fb-on-surface-variant);
+}
+
+.enterprise-check-email__login-link {
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--fb-primary);
+  text-decoration: none;
+}
+
+.enterprise-check-email__login-link:hover {
+  text-decoration: underline;
+}

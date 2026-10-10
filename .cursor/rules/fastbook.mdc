@@ -69,9 +69,10 @@ widgets/nombre-del-widget/
 - No generar código de pantallas ni BE hasta que se pida explícitamente.
 - Usar Stitch MCP antes de implementar UI; Supabase MCP para BBDD.
 - Multitenant desde el inicio. Simple primero; premium cuando toque.
-- Seguir `fastbook-roadmap.md`. No añadir dependencias sin pedirlo. Commits solo si se piden.
+- Seguir `fastbook-roadmap.md` como fuente de verdad del progreso. No añadir dependencias sin pedirlo. Commits solo si se piden.
 - Tipografías: instalar/cargar con Fontsource (`@fontsource/` o `@fontsource-variable/`).
 - Tras implementar una feature: ejecutar `pnpm verify` y el check de types de TypeScript (`tsc -b`).
+- **Al cerrar una tarea larga / feature (PR o entregable sustancial):** actualizar `fastbook-roadmap.md` antes de dar por terminado el trabajo — marcar hechos, dejar pendientes claros y un “siguiente” concreto. Ese roadmap es el punto de partida del siguiente agente; no dejar el estado solo en el chat ni en un handoff improvisado.
 - Añadir tests donde tenga sentido (casos de uso críticos). No tests basura de UI (p. ej. “¿está el botón en el documento?”).
 - **Tests y Supabase:** CI no tiene `.env.local`. Nunca importar en un unit test un módulo que inicializa `supabase-client` (p. ej. `ensure-owned-tenant.ts`, `create-booking.ts`). Extraer lógica pura a `*.utils.ts` y testear eso (como `create-booking.utils.test.ts`). Si un test necesita el client, mockearlo; no depender de tokens reales. Red de seguridad: `.env.test` con stubs (sin secretos).
 - No regar el código con `useMemo`/`useCallback`; confiar en React Compiler.

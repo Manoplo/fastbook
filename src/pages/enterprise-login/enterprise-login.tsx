@@ -9,6 +9,7 @@ import { VisibilityIcon } from "@components/icons/visibility-icon";
 import { VisibilityOffIcon } from "@components/icons/visibility-off-icon";
 import { useAuthSession } from "@src/hooks/use-auth-session";
 import { completeBusinessSetup } from "@src/lib/complete-business-setup";
+import { ENTERPRISE_CHECK_EMAIL_PATH } from "@src/lib/enterprise-auth-paths";
 import { ensureOwnedTenant } from "@src/lib/ensure-owned-tenant";
 import { signInTenant } from "@src/lib/sign-in-tenant";
 import { signUpTenant } from "@src/lib/sign-up-tenant";
@@ -83,7 +84,7 @@ export function EnterpriseLoginPage() {
   });
 
   const ownedSlug = ownedTenantQuery.data?.slug;
-  if (!isSessionLoading && ownedSlug) {
+  if (ownedSlug) {
     return <Navigate to={`/enterprise/${ownedSlug}`} replace />;
   }
 
@@ -122,10 +123,7 @@ export function EnterpriseLoginPage() {
       });
 
       if (result.needsEmailConfirmation) {
-        setInfoMessage(
-          "Te hemos enviado un email de confirmación. Cuando lo confirmes, inicia sesión para acceder a tu panel.",
-        );
-        setMode("login");
+        navigate(ENTERPRISE_CHECK_EMAIL_PATH, { replace: true });
         return;
       }
 
@@ -157,6 +155,27 @@ export function EnterpriseLoginPage() {
   const submitLabel = activeMode === "login" ? "Entrar" : activeMode === "complete" ? "Crear negocio" : "Crear cuenta";
   const submittingLabel =
     activeMode === "login" ? "Entrando…" : activeMode === "complete" ? "Creando negocio…" : "Creando cuenta…";
+
+  const isResolvingOwnedTenant = Boolean(userId) && ownedTenantQuery.isPending;
+  const showAuthBootstrap = isSessionLoading || isResolvingOwnedTenant;
+
+  if (showAuthBootstrap) {
+    return (
+      <div className="enterprise-login">
+        <section className="enterprise-login__form-panel">
+          <div className="enterprise-login__form-inner enterprise-login__form-inner--bootstrap">
+            <Link to="/" className="enterprise-login__brand" aria-label="Inicio">
+              <FastbookLogo />
+            </Link>
+            <p className="enterprise-login__bootstrap" role="status" aria-live="polite">
+              <ProgressSpinnerIcon className="enterprise-login__submit-spinner" />
+              <span>Preparando tu acceso…</span>
+            </p>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="enterprise-login">
