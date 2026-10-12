@@ -27,7 +27,7 @@ import {
   formatCustomerPhone,
 } from '@src/lib/create-booking'
 import {
-  collectAvailabilityWindows,
+  getTenantAvailabilityWindows,
   getTenantBySlug,
   resolveSlotDurationMinutes,
 } from '@src/lib/get-tenant-by-slug'
@@ -153,14 +153,16 @@ export function BookingPage() {
   }
 
   const tenant = data
-  const windows = collectAvailabilityWindows(tenant.services)
-  const durationMinutes = resolveSlotDurationMinutes(tenant.services)
+  const windows = getTenantAvailabilityWindows(tenant)
+  const selectedService = tenant.services.find((service) => service.id === serviceId)
+  const durationMinutes = selectedService
+    ? selectedService.duration_minutes
+    : resolveSlotDurationMinutes(tenant.services)
   const availableDates = buildAvailableDates({
     windows,
     from: startOfDay(new Date()),
   })
   const selectedDate = dateKey ? parseDateKey(dateKey) : null
-  const selectedService = tenant.services.find((service) => service.id === serviceId)
   const selectionComplete = Boolean(dateKey && startTime && selectedService)
   const showContinueBar = step === 1 && selectionComplete
   const canConfirm =

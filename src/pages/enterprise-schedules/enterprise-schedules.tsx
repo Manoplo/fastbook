@@ -1,10 +1,5 @@
-import { EnterpriseSectionPlaceholder } from '@components/enterprise-section-placeholder/enterprise-section-placeholder'
+import { EnterpriseSchedules } from '@src/widgets/enterprise-schedules/enterprise-schedules'
 
 export function EnterpriseSchedulesPage() {
-  return (
-    <EnterpriseSectionPlaceholder
-      title="Horarios y Servicios"
-      description="Aquí podrás configurar la disponibilidad semanal y el catálogo de servicios de tu negocio."
-    />
-  )
+  return <EnterpriseSchedules />
 }

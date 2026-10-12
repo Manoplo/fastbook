@@ -72,7 +72,7 @@ SQL en repo:
 | `/enterprise/check-email` | Post-signup: “confirma tu email” | Hecho |
 | `/enterprise/:tenantSlug` | Dashboard layout (header + floating nav) | Hecho |
 | `/enterprise/:tenantSlug/agenda` | Agenda y citas (chrome Stitch; sin listado real aún) | Hecho (shell UI) |
-| `/enterprise/:tenantSlug/schedules` | Horarios y servicios | Placeholder |
+| `/enterprise/:tenantSlug/schedules` | Horarios y servicios | Hecho (CRUD + plan free) |
 | `/enterprise/:tenantSlug/metrics` | Métricas y análisis | Placeholder |
 | `/enterprise/:tenantSlug/settings` | Ajustes de negocio | Placeholder |
 
@@ -101,24 +101,29 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 
 ### Hecho en esta iteración
 
-- [x] Layout dashboard: header (logo + badge Pro Business + nombre tenant; **sin** chip “Abierto para reservas”)
+- [x] Layout dashboard: header (logo + badge según `tenants.is_pro`; **sin** chip “Abierto para reservas”)
 - [x] Floating bar de navegación (`widgets/enterprise-dashboard-nav`)
-- [x] Rutas internas anidadas bajo `/enterprise/:tenantSlug/…` + pantallas placeholder (schedules / metrics / settings)
+- [x] Rutas internas anidadas bajo `/enterprise/:tenantSlug/…` + pantallas placeholder (metrics / settings)
 - [x] Agenda shell UI: toolbar (sin “Cabinas activas”, **sin** “Validar QR”), sidebar (búsqueda + mini-calendario + filtros; **sin** “Ocupación de espacios”), timeline vacío
 - [x] Paths helper + tests: `enterprise-dashboard-paths`, `enterprise-agenda.utils`
+- [x] **Horarios y Servicios** (`/schedules`): UI Stitch + CRUD `tenant_availability` / `services`
+- [x] Migración `tenant_availability_and_pro`: `tenants.is_pro`, horario a nivel tenant; drop `service_availability`
+- [x] Límites free unificados en modal PRO (máx. 2 servicios, sin imagen); CTA → `/pricing` (pendiente)
 
 ### Fuera de alcance deliberado (Agenda Stitch)
 
 - Chip verde “Abierto para reservas”
 - Métrica “Cabinas activas” / panel “Ocupación de espacios” (no aplica al modelo actual)
 - Botón “Validar QR” (posible en web vía cámara/`BarcodeDetector` o código manual; aplazado hasta decidir flujo)
+- Chips/cards de upsell free repetidos (Stitch); se unificó en modal
+- Upload real a Storage / Stripe / página `/pricing`
 
 ### Siguiente
 
-1. **Horarios y Servicios** en `/enterprise/:tenantSlug/schedules`: UI Stitch **Horarios y Servicios (Dashboard Empresa)** (`screens/344caed640c9428b92f49a76ea41d055`) + CRUD mínimo de `services` / `service_availability`.
-2. **Conectar Agenda** con esos servicios/availability y listar bookings reales del día (timeline + contadores + filtros).
-3. Decidir si “Validar QR” entra en MVP web (cámara vs. input de código).
-4. Verificar Redirect URLs de Supabase incluyen `/enterprise/login` (dev + prod).
+1. **Conectar Agenda** con `tenant_availability` + servicios y listar bookings reales del día (timeline + contadores + filtros).
+2. Decidir si “Validar QR” entra en MVP web (cámara vs. input de código).
+3. Verificar Redirect URLs de Supabase incluyen `/enterprise/login` (dev + prod).
+4. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
 
 Detalle operativo: ver `handoff.md`.
 
@@ -130,8 +135,8 @@ Modelo pensado para `booked.es/{slug}`: el **tenant** es la empresa; el público
 erDiagram
   auth_users ||--o| tenants : "owner_id"
   tenants ||--o{ services : "tiene"
+  tenants ||--o{ tenant_availability : "define"
   tenants ||--o{ bookings : "recibe"
-  services ||--o{ service_availability : "define"
   services ||--o{ bookings : "reserva"
 
   tenants {
@@ -139,6 +144,7 @@ erDiagram
     text slug UK
     text name
     text booking_note
+    boolean is_pro
     uuid owner_id FK
     timestamptz created_at
   }
@@ -156,9 +162,9 @@ erDiagram
     timestamptz created_at
   }
 
-  service_availability {
+  tenant_availability {
     uuid id PK
-    uuid service_id FK
+    uuid tenant_id FK
     smallint day_of_week
     time start_time
     time end_time
@@ -183,25 +189,24 @@ erDiagram
 
 | Tabla | Qué es |
 |---|---|
-| `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `booking_note` antes de confirmar. |
-| `services` | Catálogo por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. |
-| `service_availability` | Ventanas semanales por servicio (`day_of_week` 0=dom…6=sáb + `start_time`/`end_time`). |
+| `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `is_pro` (plan). `booking_note` antes de confirmar. |
+| `services` | Catálogo por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. Free: máx. 2 (UI). |
+| `tenant_availability` | Ventanas semanales del negocio (`day_of_week` 0=dom…6=sáb + `start_time`/`end_time`). |
 | `bookings` | Reserva concreta. Unique `(service_id, booking_date, start_time)` evita dobles. Status: `confirmed` \| `cancelled`. |
 
 ### Relaciones y flujo
 
-1. Un **tenant** tiene muchos **services** y un **owner** (`owner_id`).
-2. Cada **service** define su **availability** semanal.
-3. El FE público calcula slots libres: availability − bookings confirmadas, usando `duration_minutes`.
-4. Al apuntarse se crea un **booking** ligado a tenant + service + fecha/hora + datos del cliente.
-5. Alta empresa: `signUp` → (opcional confirm email) → `ensureOwnedTenant` inserta fila en `tenants` con `owner_id`.
+1. Un **tenant** tiene muchos **services**, un **horario semanal** (`tenant_availability`) y un **owner** (`owner_id`).
+2. El FE público calcula slots libres: ventanas del tenant − bookings confirmadas, usando `duration_minutes` del servicio.
+3. Al apuntarse se crea un **booking** ligado a tenant + service + fecha/hora + datos del cliente.
+4. Alta empresa: `signUp` → (opcional confirm email) → `ensureOwnedTenant` inserta fila en `tenants` con `owner_id` (`is_pro = false` por defecto).
 
 ### RLS (Row Level Security)
 
 - RLS activado en las 4 tablas.
-- Lectura pública: `tenants`, `services` activos, `service_availability`.
+- Lectura pública: `tenants`, `services` activos, `tenant_availability`.
 - Insert público de `bookings` (policies de booking público; ver migraciones `20260928*`).
-- Owner autenticado: CRUD de services / availability / bookings de su tenant vía `is_tenant_owner`.
+- Owner autenticado: CRUD de services / `tenant_availability` / bookings de su tenant vía `is_tenant_owner`.
 
 ### SQL de referencia
 
@@ -212,6 +217,7 @@ erDiagram
 | [`20260928000001_fix_bookings_insert_tenant_check.sql`](supabase/migrations/20260928000001_fix_bookings_insert_tenant_check.sql) | Check tenant en insert |
 | [`20260930000000_tenant_auth.sql`](supabase/migrations/20260930000000_tenant_auth.sql) | `owner_id` + RLS owner |
 | [`20260930000001_tenant_auth_private_helper.sql`](supabase/migrations/20260930000001_tenant_auth_private_helper.sql) | Helper privado follow-up |
+| [`20261012000000_tenant_availability_and_pro.sql`](supabase/migrations/20261012000000_tenant_availability_and_pro.sql) | `is_pro` + `tenant_availability`; drop `service_availability` |
 
 **Proyecto Supabase:** `fastbook` (`ptgltexbfxjqmyozcavt`, `eu-west-1`).
 

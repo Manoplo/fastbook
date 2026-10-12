@@ -70,6 +70,7 @@ export function EnterpriseDashboardPage() {
       id: tenant.id,
       slug: tenant.slug,
       name: tenant.name,
+      isPro: tenant.is_pro,
     },
   }
 
@@ -80,7 +81,9 @@ export function EnterpriseDashboardPage() {
           <Link to={enterpriseDashboardPath(tenant.slug)} className="enterprise-dashboard__logo-link">
             <FastbookLogo className="enterprise-dashboard__logo" />
           </Link>
-          <span className="enterprise-dashboard__plan-badge">Pro Business</span>
+          <span className="enterprise-dashboard__plan-badge">
+            {tenant.is_pro ? 'Pro Business' : 'Plan Gratuito'}
+          </span>
         </div>
 
         <h1 className="enterprise-dashboard__tenant-name">{tenant.name}</h1>
