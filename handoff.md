@@ -1,134 +1,108 @@
-# Handoff — Fastbook (sesión hasta 2026-09-30)
+# Handoff — Fastbook (sesión hasta 2026-10-12)
 
 Documento para el siguiente agente tras limpiar contexto. Leer también `.cursor/rules/fastbook.mdc` y `fastbook-roadmap.md`.
 
 ## Estado actual
 
-- **Rama:** `master` (trackea `origin/master`) — la siguiente feature irá en **rama nueva** (aún no creada)
+- **Rama:** `feat/dashboard-bookings`
 - **App:** React 19 + Vite 8 + TypeScript + **React Compiler** activo
-- **MCPs listos:** Supabase (`user-supabase`, auth OK) y Stitch (`user-stitch`)
-- **CI:** `.github/workflows/verify.yml` → `pnpm verify` (lint + tests) en cada push
-- **BBDD:** esquema capa gratuita **ya aplicado** en Supabase proyecto `fastbook`
-- **Flujo público de reserva:** operativo en `/:tenantSlug` (día → hora → servicio → datos → confirmación)
+- **MCPs listos:** Supabase (`user-supabase`) y Stitch (`user-stitch`)
+- **CI:** `pnpm verify` (lint + tests) en cada push
+- **BBDD:** esquema free tier + `tenant_auth` (owner) aplicado en Supabase `fastbook` (`ptgltexbfxjqmyozcavt`)
+- **Reserva pública:** operativa en `/:tenantSlug`
+- **Auth empresa:** login/signup + dashboard autenticado operativos
 
 ## Qué hay hecho (resumen)
 
-1. Bootstrap deps + rules + roadmap + Vitest + CI.
-2. Esquema SQL capa gratuita + seed de prueba.
-3. Flujo de reserva público completo en `/:tenantSlug`.
-4. Cliente Supabase FE + `create-booking` / `get-tenant-by-slug`.
-5. Logo Stitch + tokens de diseño.
-
-## Supabase
-
-| Campo | Valor |
-|---|---|
-| Proyecto | `fastbook` |
-| Project ID / ref | `ptgltexbfxjqmyozcavt` |
-| Región | `eu-west-1` |
-| Migración aplicada | `free_tier_schema` |
-| SQL en repo | `supabase/migrations/20260927000000_free_tier_schema.sql` |
-
-**Tablas:** `tenants`, `services`, `service_availability`, `bookings` (RLS on).
-
-### Auth de tenants — gap actual
-
-`tenants` **no** está ligado a autenticación. Columnas actuales:
-
-`id`, `slug`, `name`, `booking_note`, `created_at`
-
-No hay email/password ni FK a `auth.users`. El alta de negocio en `/` sigue siendo placeholder. Para el dashboard de empresa hay que **modificar el esquema** (nueva migración) y usar **Supabase Auth** (email + password).
-
-Dirección esperada (a validar al implementar):
-
-- Alta / login del tenant con `supabase.auth.signUp` / `signInWithPassword`.
-- Vincular el usuario autenticado al tenant (p. ej. `tenants.owner_id uuid references auth.users(id)` o tabla `tenant_members`).
-- Ajustar RLS del dashboard para que solo el owner/miembro lea/escriba datos de su tenant.
-- **No** guardar passwords en `public.tenants`; viven en `auth.users`.
+1. Bootstrap + CI + tokens + logo.
+2. Flujo público de reserva completo.
+3. Auth enterprise (Supabase email/password, `owner_id`, RLS owner, check-email).
+4. **Dashboard shell (Fase 3 en curso):**
+   - Layout header + floating nav
+   - Rutas anidadas bajo `/enterprise/:tenantSlug/…`
+   - Agenda UI shell (Stitch) sin datos reales
+   - Placeholders: schedules / metrics / settings
 
 ## Stitch
 
-- Proyecto: **Mobile QR Booking System** (`projects/4608395597619626930`) — es el de Fastbook.
-- Pantalla reserva (pública): **Selección de Cita y Servicios (Desktop)** (`…/screens/486c818668584d6cb564a4eb9006dab9`)
-- **Login empresas (siguiente UI):** **Login de Empresas - fastbook Pro Business (Desktop)** (`…/screens/d66b74e188954958885d664b3626d472`)
-- Dashboard (referencia posterior): **Agenda y Citas (Dashboard Empresa)** (`…/screens/f9906e9f957247df95e5173dde8ff31e`)
-- Logo actual: **Logo fastbook: Calendario + Rayo Lineal** (`…/screens/4967316844124ee5bc79b8410e9f28d4`) → `src/assets/fastbook-logo.svg`
-- Tokens clave: primary `#1c2ac8` / logo blue `#3B49DF`, font **Plus Jakarta Sans** (`@fontsource-variable/plus-jakarta-sans`), surface `#f8f9ff`
+- Proyecto: **Mobile QR Booking System** (`projects/4608395597619626930`)
+- Agenda (dashboard): **Agenda y Citas (Dashboard Empresa)** — preferir la variante nueva `screens/4bbda819ea6e4f0e84a9052102a10fe3` (también existe `f9906e9f957247df95e5173dde8ff31e`)
+- **Siguiente UI:** **Horarios y Servicios (Dashboard Empresa)** (`screens/344caed640c9428b92f49a76ea41d055`)
+- Login empresas: `screens/d66b74e188954958885d664b3626d472`
+- Tokens: primary `#1c2ac8` / logo `#3B49DF`, Plus Jakarta Sans, surface `#f8f9ff`
 
-## Arquitectura FE (ya en uso)
+## Arquitectura FE relevante
 
 ```
 src/
-  pages/booking/     → ruta /:tenantSlug (flujo reserva público)
-  pages/home/        → ruta / (placeholder alta negocio)
-  components/…
-  lib/               → supabase-client, create-booking, get-tenant-by-slug, …
-  index.css          → design tokens --fb-*
+  pages/enterprise-dashboard/   → layout autenticado + Outlet
+  pages/enterprise-agenda/      → /agenda
+  pages/enterprise-schedules/   → /schedules (placeholder hoy)
+  pages/enterprise-metrics/     → /metrics (placeholder)
+  pages/enterprise-settings/    → /settings (placeholder)
+  widgets/enterprise-dashboard-nav/
+  widgets/enterprise-agenda/    → toolbar + sidebar + timeline vacío
+  lib/enterprise-dashboard-paths.ts
 ```
 
-Convenciones: kebab-case; `type` > `interface`; colocalizar css/types/utils/test; Fontsource para tipografías.
+## Rutas enterprise
 
-## Rutas
+| Ruta | Estado |
+|---|---|
+| `/enterprise/login` | Hecho |
+| `/enterprise/check-email` | Hecho |
+| `/enterprise/:tenantSlug` → redirect `/agenda` | Hecho |
+| `/enterprise/:tenantSlug/agenda` | Shell UI (sin bookings reales) |
+| `/enterprise/:tenantSlug/schedules` | **Placeholder — siguiente** |
+| `/enterprise/:tenantSlug/metrics` | Placeholder |
+| `/enterprise/:tenantSlug/settings` | Placeholder |
 
-| Ruta | Página | Estado |
-|---|---|---|
-| `/` | Alta empresa (placeholder) | Existe |
-| `/:tenantSlug` | Flujo de reserva público | Hecho |
-| `/enterprise/login` | Login email+password del tenant | **Pendiente** |
-| `/enterprise/:tenantSlug` | Dashboard del tenant (tras login) | **Pendiente** |
-
-Propuesta de naming (revisable al implementar): prefijo `/enterprise/…` para no colisionar con el slug público `/:tenantSlug`.
-
-Ejemplo local reserva: `pnpm dev` → `/demo-salon`
+Exclusiones deliberadas de Agenda Stitch: chip “Abierto para reservas”, cabinas/ocupación, botón Validar QR.
 
 ## Comandos
 
 ```bash
 pnpm dev
-pnpm verify          # oxlint + vitest run
-pnpm exec tsc -b     # check types (obligatorio tras features)
-pnpm test            # watch
+pnpm verify
+pnpm exec tsc -b
 ```
 
-## Siguiente trabajo (prioridad) — Dashboard tenant
+## Siguiente trabajo (prioridad)
 
-Objetivo: que el tenant acceda a su dashboard tras registrarse / iniciar sesión.
+Objetivo: pantalla de **creación/gestión de horarios y servicios**, y conectar la **enterprise agenda** con esos servicios.
 
-Orden sugerido en **rama nueva**:
+### 1. Horarios y Servicios (`/schedules`)
 
-1. **BBDD + Auth**
-   - Migración: vincular `tenants` ↔ `auth.users` (owner / members).
-   - Políticas RLS para lectura/escritura autenticada por tenant.
-   - Flujo de alta (signUp) + login (signIn) con email+password vía Supabase Auth.
-   - Seed / usuario de prueba para desarrollo.
+1. Cargar en Stitch MCP **Horarios y Servicios (Dashboard Empresa)** (`screens/344caed640c9428b92f49a76ea41d055`).
+2. Sustituir el placeholder de `pages/enterprise-schedules` por UI real.
+3. CRUD mínimo sobre `services` + `service_availability` del tenant (RLS owner ya permite).
+4. Extraer lógica pura a `*.utils.ts` y testear sin importar `supabase-client` en unit tests.
 
-2. **Rutas enterprise**
-   - `/enterprise/login` → formulario de acceso.
-   - Tras auth OK → `/enterprise/:tenantSlug` (dashboard; puede ser shell mínimo al inicio).
-   - Guard de ruta: sin sesión → redirect a login.
+### 2. Conectar Agenda ↔ servicios / availability
 
-3. **Pantalla de login (UI)**
-   - Antes de implementar: cargar en Stitch MCP la pantalla **Login de Empresas - fastbook Pro Business (Desktop)** (`screens/d66b74e188954958885d664b3626d472`).
-   - Implementar FE siguiendo ese diseño (tokens existentes `--fb-*`).
+1. Que la agenda use los servicios y franjas configurados (no mocks).
+2. Listar bookings del día seleccionado en la línea temporal (select owner).
+3. Contadores “Citas hoy” / “Previsto” + filtros/búsqueda sobre datos reales.
+4. “Nueva Cita” puede quedar deshabilitada o wire mínimo según alcance acordado.
 
-4. **Dashboard (después del login)**
-   - Referencia Stitch: **Agenda y Citas (Dashboard Empresa)** (`screens/f9906e9f957247df95e5173dde8ff31e`).
-   - Fuera del alcance mínimo si solo se pide login + shell autenticado; confirmar con el usuario.
+### Fuera de alcance inmediato (salvo que el usuario lo pida)
+
+- Validar QR en web
+- Métricas / Ajustes reales
+- Multi-usuario por tenant
+- Recover password
 
 ## Notas para el agente
 
 - Responder en **español**.
-- Antes de UI nueva: cargar pantalla en Stitch MCP.
-- Antes de DDL/ops BBDD: Supabase MCP (`apply_migration` / `execute_sql`) + skill Supabase.
-- Tras feature: `pnpm verify` + `tsc -b`.
-- Tests solo casos críticos (no “¿está el botón en el DOM?”).
-- **No** `useMemo`/`useCallback` preventivos.
-- Commits / deps nuevas solo si el usuario lo pide.
-- En `vite.config.ts` el React Compiler se desactiva en `mode === 'test'` (Babel preset solo fuera de test).
-- No generar pantallas ni BE hasta que se pida explícitamente (este handoff solo planifica).
+- Antes de UI: Stitch MCP. Antes de DDL: Supabase MCP + skill Supabase.
+- Tras feature: `pnpm verify` + `tsc -b` + actualizar `fastbook-roadmap.md`.
+- Sin `useMemo`/`useCallback` preventivos; estilos condicionales con `classnames`.
+- Commits / deps nuevas solo si se piden.
+- No generar pantallas ni BE hasta petición explícita.
 
 ## Archivos de verdad
 
-- Reglas agente: `.cursor/rules/fastbook.mdc`
+- Reglas: `.cursor/rules/fastbook.mdc`
 - Plan: `fastbook-roadmap.md`
 - Este handoff: `handoff.md`

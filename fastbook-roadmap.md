@@ -70,10 +70,14 @@ SQL en repo:
 | `/:tenantSlug` | Reserva pública | Hecho |
 | `/enterprise/login` | Login + signup (toggle) UI Stitch | Hecho |
 | `/enterprise/check-email` | Post-signup: “confirma tu email” | Hecho |
-| `/enterprise/:tenantSlug` | Dashboard shell (logout, link a página pública) | Hecho (vacío de features) |
+| `/enterprise/:tenantSlug` | Dashboard layout (header + floating nav) | Hecho |
+| `/enterprise/:tenantSlug/agenda` | Agenda y citas (chrome Stitch; sin listado real aún) | Hecho (shell UI) |
+| `/enterprise/:tenantSlug/schedules` | Horarios y servicios | Placeholder |
+| `/enterprise/:tenantSlug/metrics` | Métricas y análisis | Placeholder |
+| `/enterprise/:tenantSlug/settings` | Ajustes de negocio | Placeholder |
 
 - [x] Pantalla login/signup siguiendo Stitch **Login de Empresas**
-- [x] Redirect post-auth a `/enterprise/:tenantSlug`
+- [x] Redirect post-auth a `/enterprise/:tenantSlug` (index → `/agenda`)
 - [x] Tests unitarios de utils (`tenant-auth.utils`, `ensure-owned-tenant.utils`) sin depender de tokens reales
 - [x] Post-signup → `/enterprise/check-email` (no mensaje inline en login)
 - [x] `emailRedirectTo` → `/enterprise/login` (sesión post-confirm → auto dashboard; nunca aterrizar en `/`)
@@ -86,20 +90,37 @@ SQL en repo:
 
 ### Fuera de alcance de esta fase (siguiente)
 
-- [ ] Dashboard real: agenda, citas, gestión de servicios / availability (ref. Stitch **Agenda y Citas**)
 - [ ] Flujo de “completar alta de negocio” en UI si `needs_business_setup` (lib ya existe)
 - [ ] Miembros / roles multi-usuario por tenant (hoy solo `owner_id`)
 - [ ] Recover password / magic link
 - [ ] Features premium
 
-## Fase 3 — Dashboard tenant (siguiente)
+## Fase 3 — Dashboard tenant (en curso)
 
-Punto de partida para el siguiente agente:
+Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard Empresa)** (`screens/4bbda819ea6e4f0e84a9052102a10fe3`, proyecto Mobile QR Booking System).
 
-1. Cargar en Stitch la pantalla **Agenda y Citas (Dashboard Empresa)** y alinear UI.
-2. Listar bookings del tenant autenticado (RLS owner ya permite select).
-3. CRUD mínimo de servicios y/o availability desde el panel.
-4. Verificar en dashboard de Supabase que Redirect URLs incluye `/enterprise/login` (dev + prod).
+### Hecho en esta iteración
+
+- [x] Layout dashboard: header (logo + badge Pro Business + nombre tenant; **sin** chip “Abierto para reservas”)
+- [x] Floating bar de navegación (`widgets/enterprise-dashboard-nav`)
+- [x] Rutas internas anidadas bajo `/enterprise/:tenantSlug/…` + pantallas placeholder (schedules / metrics / settings)
+- [x] Agenda shell UI: toolbar (sin “Cabinas activas”, **sin** “Validar QR”), sidebar (búsqueda + mini-calendario + filtros; **sin** “Ocupación de espacios”), timeline vacío
+- [x] Paths helper + tests: `enterprise-dashboard-paths`, `enterprise-agenda.utils`
+
+### Fuera de alcance deliberado (Agenda Stitch)
+
+- Chip verde “Abierto para reservas”
+- Métrica “Cabinas activas” / panel “Ocupación de espacios” (no aplica al modelo actual)
+- Botón “Validar QR” (posible en web vía cámara/`BarcodeDetector` o código manual; aplazado hasta decidir flujo)
+
+### Siguiente
+
+1. **Horarios y Servicios** en `/enterprise/:tenantSlug/schedules`: UI Stitch **Horarios y Servicios (Dashboard Empresa)** (`screens/344caed640c9428b92f49a76ea41d055`) + CRUD mínimo de `services` / `service_availability`.
+2. **Conectar Agenda** con esos servicios/availability y listar bookings reales del día (timeline + contadores + filtros).
+3. Decidir si “Validar QR” entra en MVP web (cámara vs. input de código).
+4. Verificar Redirect URLs de Supabase incluyen `/enterprise/login` (dev + prod).
+
+Detalle operativo: ver `handoff.md`.
 
 ## Esquema de datos (capa gratuita + auth)
 
