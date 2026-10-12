@@ -1,0 +1,33 @@
+.enterprise-section-placeholder {
+  width: 100%;
+  max-width: 36rem;
+  margin: 1.5rem auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 2rem;
+  border-radius: 1rem;
+  background: var(--fb-surface-container-lowest);
+  border: 1px solid var(--fb-outline-variant);
+  box-shadow: var(--fb-shadow-sm);
+}
+
+.enterprise-section-placeholder__eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fb-primary);
+}
+
+.enterprise-section-placeholder__title {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.enterprise-section-placeholder__text {
+  color: var(--fb-on-surface-variant);
+  line-height: 1.55;
+}
