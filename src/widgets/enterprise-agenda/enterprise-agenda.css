@@ -264,7 +264,9 @@
 }
 
 .enterprise-agenda__day {
+  position: relative;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 2rem;
@@ -278,6 +280,20 @@
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
+  line-height: 1;
+}
+
+.enterprise-agenda__day-dot {
+  position: absolute;
+  bottom: 0.15rem;
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: var(--fb-primary-container);
+}
+
+.enterprise-agenda__day--selected .enterprise-agenda__day-dot {
+  background: var(--fb-on-primary);
 }
 
 .enterprise-agenda__day:hover {
@@ -411,6 +427,15 @@
 .enterprise-agenda__timeline-meta {
   font-size: 0.8rem;
   color: var(--fb-on-surface-variant);
+}
+
+.enterprise-agenda__booking-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
 }
 
 .enterprise-agenda__empty {

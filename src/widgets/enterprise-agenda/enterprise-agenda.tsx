@@ -1,11 +1,17 @@
 import { useState } from 'react'
 import classNames from 'classnames'
+import { useQuery } from '@tanstack/react-query'
+import { useOutletContext } from 'react-router-dom'
 import { AddIcon } from '@components/icons/add-icon'
 import { CalendarMonthIcon } from '@components/icons/calendar-month-icon'
 import { ChevronLeftIcon } from '@components/icons/chevron-left-icon'
 import { ChevronRightIcon } from '@components/icons/chevron-right-icon'
 import { PaymentsIcon } from '@components/icons/payments-icon'
 import { ScheduleIcon } from '@components/icons/schedule-icon'
+import { listTenantAvailability } from '@src/lib/tenant-availability'
+import { listTenantBookingsInRange } from '@src/lib/tenant-bookings'
+import type { EnterpriseDashboardOutletContext } from '@src/pages/enterprise-dashboard/enterprise-dashboard.types'
+import { AgendaBookingCard } from './agenda-booking-card/agenda-booking-card'
 import type { AgendaStatusFilter } from './enterprise-agenda.types'
 import {
   AGENDA_STATUS_FILTERS,
@@ -13,19 +19,65 @@ import {
   addDays,
   addMonths,
   buildMonthGrid,
+  collectBookingDateKeys,
+  countActiveBookings,
+  countAgendaByStatus,
+  filterAgendaBookings,
+  formatActiveRangeLabel,
   formatAgendaDateLabel,
+  formatAgendaPrice,
   formatMonthYear,
+  getWindowsForWeekday,
+  resolveBookingsQueryRange,
   startOfDay,
+  sumProjectedRevenue,
+  toAgendaBookingCard,
   toDateKey,
 } from './enterprise-agenda.utils'
 import './enterprise-agenda.css'
 
 export function EnterpriseAgenda() {
+  const { tenant } = useOutletContext<EnterpriseDashboardOutletContext>()
   const [today] = useState(() => startOfDay(new Date()))
+  const [now] = useState(() => new Date())
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()))
   const [viewMonth, setViewMonth] = useState(() => startOfDay(new Date()))
   const [statusFilter, setStatusFilter] = useState<AgendaStatusFilter>('all')
   const [search, setSearch] = useState('')
+
+  const { fromDate, toDate } = resolveBookingsQueryRange(viewMonth, selectedDate)
+  const selectedKey = toDateKey(selectedDate)
+
+  const bookingsQuery = useQuery({
+    queryKey: ['tenant-bookings', tenant.id, fromDate, toDate],
+    queryFn: () => listTenantBookingsInRange(tenant.id, fromDate, toDate),
+  })
+
+  const availabilityQuery = useQuery({
+    queryKey: ['tenant-availability', tenant.id],
+    queryFn: () => listTenantAvailability(tenant.id),
+  })
+
+  const monthBookings = bookingsQuery.data ?? []
+  const bookingDateKeys = collectBookingDateKeys(monthBookings)
+
+  const dayBookings = monthBookings
+    .filter((booking) => booking.booking_date === selectedKey)
+    .map((booking) => toAgendaBookingCard(booking, now))
+
+  const filteredBookings = filterAgendaBookings(dayBookings, {
+    statusFilter,
+    search,
+  })
+
+  const statusCounts = countAgendaByStatus(dayBookings)
+  const bookingCount = countActiveBookings(dayBookings)
+  const projectedRevenue = sumProjectedRevenue(dayBookings)
+  const projectedRevenueLabel =
+    dayBookings.length === 0 ? '—' : formatAgendaPrice(projectedRevenue)
+
+  const dayWindows = getWindowsForWeekday(availabilityQuery.data ?? [], selectedDate)
+  const activeRangeLabel = formatActiveRangeLabel(dayWindows)
 
   const days = buildMonthGrid({
     viewMonth,
@@ -34,9 +86,6 @@ export function EnterpriseAgenda() {
     minDate: new Date(1970, 0, 1),
     availableKeys: null,
   })
-
-  const bookingCount = 0
-  const projectedRevenueLabel = '—'
 
   return (
     <div className="enterprise-agenda">
@@ -90,7 +139,9 @@ export function EnterpriseAgenda() {
               <CalendarMonthIcon className="enterprise-agenda__stat-icon enterprise-agenda__stat-icon--primary" />
               <p className="enterprise-agenda__stat-text">
                 <span className="enterprise-agenda__stat-value">{bookingCount}</span>
-                <span className="enterprise-agenda__stat-label">Citas hoy</span>
+                <span className="enterprise-agenda__stat-label">
+                  {selectedKey === toDateKey(today) ? 'Citas hoy' : 'Citas'}
+                </span>
               </p>
             </div>
             <div className="enterprise-agenda__stat">
@@ -154,25 +205,34 @@ export function EnterpriseAgenda() {
             </div>
 
             <div className="enterprise-agenda__day-grid">
-              {days.map((day) => (
-                <button
-                  key={toDateKey(day.date)}
-                  type="button"
-                  className={classNames('enterprise-agenda__day', {
-                    'enterprise-agenda__day--selected': day.isSelected,
-                    'enterprise-agenda__day--today': day.isToday && !day.isSelected,
-                    'enterprise-agenda__day--muted': !day.isCurrentMonth,
-                  })}
-                  onClick={() => {
-                    setSelectedDate(startOfDay(day.date))
-                    if (!day.isCurrentMonth) {
-                      setViewMonth(startOfDay(day.date))
-                    }
-                  }}
-                >
-                  {day.dayNumber}
-                </button>
-              ))}
+              {days.map((day) => {
+                const dayKey = toDateKey(day.date)
+                const hasBookings = bookingDateKeys.has(dayKey)
+
+                return (
+                  <button
+                    key={dayKey}
+                    type="button"
+                    className={classNames('enterprise-agenda__day', {
+                      'enterprise-agenda__day--selected': day.isSelected,
+                      'enterprise-agenda__day--today': day.isToday && !day.isSelected,
+                      'enterprise-agenda__day--muted': !day.isCurrentMonth,
+                      'enterprise-agenda__day--has-bookings': hasBookings && !day.isSelected,
+                    })}
+                    onClick={() => {
+                      setSelectedDate(startOfDay(day.date))
+                      if (!day.isCurrentMonth) {
+                        setViewMonth(startOfDay(day.date))
+                      }
+                    }}
+                  >
+                    <span>{day.dayNumber}</span>
+                    {hasBookings ? (
+                      <span className="enterprise-agenda__day-dot" aria-hidden="true" />
+                    ) : null}
+                  </button>
+                )
+              })}
             </div>
           </section>
 
@@ -195,7 +255,9 @@ export function EnterpriseAgenda() {
                       )}
                     />
                     <span className="enterprise-agenda__filter-label">{option.label}</span>
-                    <span className="enterprise-agenda__filter-count">0</span>
+                    <span className="enterprise-agenda__filter-count">
+                      {statusCounts[option.id]}
+                    </span>
                   </button>
                 </li>
               ))}
@@ -210,19 +272,43 @@ export function EnterpriseAgenda() {
               <h2 className="enterprise-agenda__timeline-title">Línea Temporal de Citas</h2>
             </div>
             <p className="enterprise-agenda__timeline-meta">
-              Rango activo: <strong>09:00 – 20:00</strong>
+              Rango activo: <strong>{activeRangeLabel}</strong>
               <span aria-hidden="true"> · </span>
               Zona horaria: <strong>Madrid (CET)</strong>
             </p>
           </header>
 
-          <div className="enterprise-agenda__empty">
-            <p className="enterprise-agenda__empty-title">No hay citas para este día</p>
-            <p className="enterprise-agenda__empty-text">
-              Cuando lleguen reservas desde tu página pública, aparecerán aquí en la línea temporal.
-              {search.trim() ? ' Prueba a limpiar la búsqueda si esperabas resultados.' : null}
-            </p>
-          </div>
+          {bookingsQuery.isLoading ? (
+            <div className="enterprise-agenda__empty">
+              <p className="enterprise-agenda__empty-title">Cargando citas…</p>
+            </div>
+          ) : bookingsQuery.isError ? (
+            <div className="enterprise-agenda__empty">
+              <p className="enterprise-agenda__empty-title">No se pudieron cargar las citas</p>
+              <p className="enterprise-agenda__empty-text">
+                Revisa la conexión e inténtalo de nuevo.
+              </p>
+            </div>
+          ) : filteredBookings.length === 0 ? (
+            <div className="enterprise-agenda__empty">
+              <p className="enterprise-agenda__empty-title">No hay citas para este día</p>
+              <p className="enterprise-agenda__empty-text">
+                Cuando lleguen reservas desde tu página pública, aparecerán aquí en la línea
+                temporal.
+                {search.trim() || statusFilter !== 'all'
+                  ? ' Prueba a limpiar la búsqueda o el filtro si esperabas resultados.'
+                  : null}
+              </p>
+            </div>
+          ) : (
+            <ul className="enterprise-agenda__booking-list">
+              {filteredBookings.map((booking) => (
+                <li key={booking.id}>
+                  <AgendaBookingCard booking={booking} />
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
     </div>

@@ -71,7 +71,7 @@ SQL en repo:
 | `/enterprise/login` | Login + signup (toggle) UI Stitch | Hecho |
 | `/enterprise/check-email` | Post-signup: “confirma tu email” | Hecho |
 | `/enterprise/:tenantSlug` | Dashboard layout (header + floating nav) | Hecho |
-| `/enterprise/:tenantSlug/agenda` | Agenda y citas (chrome Stitch; sin listado real aún) | Hecho (shell UI) |
+| `/enterprise/:tenantSlug/agenda` | Agenda y citas (bookings reales + cards Stitch) | Hecho |
 | `/enterprise/:tenantSlug/schedules` | Horarios y servicios | Hecho (CRUD + plan free) |
 | `/enterprise/:tenantSlug/metrics` | Métricas y análisis | Placeholder |
 | `/enterprise/:tenantSlug/settings` | Ajustes de negocio | Placeholder |
@@ -104,7 +104,8 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] Layout dashboard: header (logo + badge según `tenants.is_pro`; **sin** chip “Abierto para reservas”)
 - [x] Floating bar de navegación (`widgets/enterprise-dashboard-nav`)
 - [x] Rutas internas anidadas bajo `/enterprise/:tenantSlug/…` + pantallas placeholder (metrics / settings)
-- [x] Agenda shell UI: toolbar (sin “Cabinas activas”, **sin** “Validar QR”), sidebar (búsqueda + mini-calendario + filtros; **sin** “Ocupación de espacios”), timeline vacío
+- [x] Agenda UI: toolbar (sin “Cabinas activas”, **sin** “Validar QR”), sidebar (búsqueda + mini-calendario + filtros; **sin** “Ocupación de espacios”)
+- [x] **Agenda conectada a BBDD:** `lib/tenant-bookings.ts` + cards Stitch (`agenda-booking-card`) + contadores / filtros / búsqueda / rango desde `tenant_availability`
 - [x] Paths helper + tests: `enterprise-dashboard-paths`, `enterprise-agenda.utils`
 - [x] **Horarios y Servicios** (`/schedules`): UI Stitch + CRUD `tenant_availability` / `services`
 - [x] Migración `tenant_availability_and_pro`: `tenants.is_pro`, horario a nivel tenant; drop `service_availability`
@@ -115,12 +116,14 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - Chip verde “Abierto para reservas”
 - Métrica “Cabinas activas” / panel “Ocupación de espacios” (no aplica al modelo actual)
 - Botón “Validar QR” (posible en web vía cámara/`BarcodeDetector` o código manual; aplazado hasta decidir flujo)
+- “Nueva Cita” manual / huecos vacíos clicables
+- Persistencia de estados `in_progress` / `completed` (hoy se derivan de la hora; BBDD solo `confirmed` \| `cancelled`)
 - Chips/cards de upsell free repetidos (Stitch); se unificó en modal
 - Upload real a Storage / Stripe / página `/pricing`
 
 ### Siguiente
 
-1. **Conectar Agenda** con `tenant_availability` + servicios y listar bookings reales del día (timeline + contadores + filtros).
+1. Acciones sobre citas (cancelar / completar en BBDD) si se quiere ir más allá del estado derivado por hora.
 2. Decidir si “Validar QR” entra en MVP web (cámara vs. input de código).
 3. Verificar Redirect URLs de Supabase incluyen `/enterprise/login` (dev + prod).
 4. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
