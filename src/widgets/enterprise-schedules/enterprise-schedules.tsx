@@ -11,6 +11,7 @@ import {
   updateTenantService,
   type TenantServiceRow,
 } from "@src/lib/tenant-services";
+import { ServiceImagesModal } from "./service-images-modal/service-images-modal";
 import { ServicesCatalog } from "./services-catalog/services-catalog";
 import { UpgradeProModal } from "./upgrade-pro-modal/upgrade-pro-modal";
 import { WeeklyScheduleEditor } from "./weekly-schedule-editor/weekly-schedule-editor";
@@ -43,6 +44,8 @@ export function EnterpriseSchedules() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<UpgradeProReason>("service_limit");
   const [serviceToDelete, setServiceToDelete] = useState<TenantServiceRow | null>(null);
+  const [imagesModalOpen, setImagesModalOpen] = useState(false);
+  const [imagesModalLabel, setImagesModalLabel] = useState<string | undefined>(undefined);
 
   const availabilityQuery = useQuery({
     queryKey: ["tenant-availability", tenant.id],
@@ -166,6 +169,11 @@ export function EnterpriseSchedules() {
     setServiceToDelete(service);
   }
 
+  function handleOpenServiceImages(service: TenantServiceRow | null) {
+    setImagesModalLabel(service?.name ?? (editingServiceId === "new" ? "Nuevo servicio" : undefined));
+    setImagesModalOpen(true);
+  }
+
   async function handleConfirmDelete() {
     if (!serviceToDelete) {
       return;
@@ -247,6 +255,7 @@ export function EnterpriseSchedules() {
           }}
           onDelete={handleDelete}
           onRequestUpgrade={openUpgrade}
+          onOpenServiceImages={handleOpenServiceImages}
         />
       </div>
 
@@ -255,6 +264,14 @@ export function EnterpriseSchedules() {
         reason={upgradeReason}
         onClose={() => {
           setUpgradeOpen(false);
+        }}
+      />
+
+      <ServiceImagesModal
+        open={imagesModalOpen}
+        serviceLabel={imagesModalLabel}
+        onClose={() => {
+          setImagesModalOpen(false);
         }}
       />
 

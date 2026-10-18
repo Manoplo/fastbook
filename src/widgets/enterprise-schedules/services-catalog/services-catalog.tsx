@@ -4,6 +4,7 @@ import { DeleteIcon } from '@components/icons/delete-icon'
 import { EditIcon } from '@components/icons/edit-icon'
 import { ImageIcon } from '@components/icons/image-icon'
 import { LockIcon } from '@components/icons/lock-icon'
+import type { TenantServiceRow } from '@src/lib/tenant-services'
 import {
   FREE_MAX_SERVICES,
   canAddService,
@@ -27,10 +28,15 @@ export function ServicesCatalog({
   onSubmit,
   onDelete,
   onRequestUpgrade,
+  onOpenServiceImages,
 }: ServicesCatalogProps) {
   const allowAdd = canAddService({ isPro, serviceCount: services.length })
   const allowImage = canUploadServiceImage(isPro)
   const isCreating = editingServiceId === 'new'
+  const editingService =
+    editingServiceId && editingServiceId !== 'new'
+      ? (services.find((service) => service.id === editingServiceId) ?? null)
+      : null
 
   function handleAddClick() {
     if (!allowAdd) {
@@ -40,10 +46,12 @@ export function ServicesCatalog({
     onStartCreate()
   }
 
-  function handleImageClick() {
+  function handleImageClick(service: TenantServiceRow | null) {
     if (!allowImage) {
       onRequestUpgrade('image_upload')
+      return
     }
+    onOpenServiceImages(service)
   }
 
   return (
@@ -78,10 +86,12 @@ export function ServicesCatalog({
                 className={classNames('services-catalog__image', {
                   'services-catalog__image--locked': !allowImage,
                 })}
-                onClick={handleImageClick}
+                onClick={() => {
+                  handleImageClick(service)
+                }}
                 aria-label={
                   allowImage
-                    ? 'Subir imagen del servicio'
+                    ? 'Abrir galería del servicio'
                     : 'Imagen disponible en plan Pro'
                 }
               >
@@ -223,12 +233,14 @@ export function ServicesCatalog({
             className={classNames('services-catalog__image-upload', {
               'services-catalog__image-upload--locked': !allowImage,
             })}
-            onClick={handleImageClick}
+            onClick={() => {
+              handleImageClick(editingService)
+            }}
           >
             <ImageIcon className="services-catalog__image-upload-icon" />
             <span>
               {allowImage
-                ? 'Subir imagen del servicio'
+                ? 'Galería e imágenes del servicio'
                 : 'Subida de imagen solo en plan Pro'}
             </span>
             {!allowImage ? <LockIcon className="services-catalog__lock-icon" /> : null}

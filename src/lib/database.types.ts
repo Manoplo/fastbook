@@ -82,10 +82,12 @@ export type Database = {
           duration_minutes: number
           id: string
           image_url: string | null
+          image_urls: string[]
           name: string
           price: number
           tags: string[] | null
           tenant_id: string
+          youtube_url: string | null
         }
         Insert: {
           active?: boolean
@@ -94,10 +96,12 @@ export type Database = {
           duration_minutes?: number
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           name: string
           price: number
           tags?: string[] | null
           tenant_id: string
+          youtube_url?: string | null
         }
         Update: {
           active?: boolean
@@ -106,10 +110,12 @@ export type Database = {
           duration_minutes?: number
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           name?: string
           price?: number
           tags?: string[] | null
           tenant_id?: string
+          youtube_url?: string | null
         }
         Relationships: [
           {

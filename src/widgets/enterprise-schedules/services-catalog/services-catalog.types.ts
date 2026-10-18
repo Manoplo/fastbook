@@ -15,4 +15,6 @@ export type ServicesCatalogProps = {
   onSubmit: () => void
   onDelete: (service: TenantServiceRow) => void
   onRequestUpgrade: (reason: 'service_limit' | 'image_upload') => void
+  /** Abre la galería Pro (drag & drop). Si no hay servicio aún, `service` es null. */
+  onOpenServiceImages: (service: TenantServiceRow | null) => void
 }
