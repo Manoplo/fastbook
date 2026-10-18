@@ -3,7 +3,7 @@ import type { Tables } from './database.types'
 
 export type OwnedTenant = Pick<
   Tables<'tenants'>,
-  'id' | 'slug' | 'name' | 'booking_note' | 'owner_id'
+  'id' | 'slug' | 'name' | 'booking_note' | 'owner_id' | 'is_pro'
 >
 
 export async function getTenantByOwner(
@@ -11,7 +11,7 @@ export async function getTenantByOwner(
 ): Promise<OwnedTenant | null> {
   const { data, error } = await supabase
     .from('tenants')
-    .select('id, slug, name, booking_note, owner_id')
+    .select('id, slug, name, booking_note, owner_id, is_pro')
     .eq('owner_id', ownerId)
     .maybeSingle()
 

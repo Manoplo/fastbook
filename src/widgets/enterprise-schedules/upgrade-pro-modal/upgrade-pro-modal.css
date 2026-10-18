@@ -1,0 +1,41 @@
+.upgrade-pro-modal__body {
+  margin: 0;
+  font-size: 0.925rem;
+  line-height: 1.5;
+  color: var(--fb-on-surface-variant);
+}
+
+.upgrade-pro-modal__secondary,
+.upgrade-pro-modal__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.6rem;
+  padding: 0.55rem 1rem;
+  border-radius: 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.upgrade-pro-modal__secondary {
+  border: 1px solid var(--fb-outline-variant);
+  background: transparent;
+  color: var(--fb-on-surface);
+}
+
+.upgrade-pro-modal__secondary:hover {
+  background: var(--fb-surface-container-low);
+}
+
+.upgrade-pro-modal__primary {
+  border: none;
+  background: var(--fb-primary-container);
+  color: var(--fb-on-primary);
+}
+
+.upgrade-pro-modal__primary:hover {
+  filter: brightness(1.05);
+}

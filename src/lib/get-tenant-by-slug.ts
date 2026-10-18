@@ -1,8 +1,8 @@
 import { supabase } from './supabase-client'
 import type { Tables } from './database.types'
 
-export type TenantServiceAvailability = Pick<
-  Tables<'service_availability'>,
+export type TenantAvailabilityWindow = Pick<
+  Tables<'tenant_availability'>,
   'day_of_week' | 'start_time' | 'end_time'
 >
 
@@ -16,15 +16,14 @@ export type TenantService = Pick<
   | 'tags'
   | 'duration_minutes'
   | 'active'
-> & {
-  service_availability: TenantServiceAvailability[]
-}
+>
 
 export type TenantWithServices = Pick<
   Tables<'tenants'>,
-  'id' | 'slug' | 'name' | 'booking_note'
+  'id' | 'slug' | 'name' | 'booking_note' | 'is_pro'
 > & {
   services: TenantService[]
+  tenant_availability: TenantAvailabilityWindow[]
 }
 
 export async function getTenantBySlug(
@@ -38,6 +37,12 @@ export async function getTenantBySlug(
       slug,
       name,
       booking_note,
+      is_pro,
+      tenant_availability (
+        day_of_week,
+        start_time,
+        end_time
+      ),
       services (
         id,
         name,
@@ -46,12 +51,7 @@ export async function getTenantBySlug(
         image_url,
         tags,
         duration_minutes,
-        active,
-        service_availability (
-          day_of_week,
-          start_time,
-          end_time
-        )
+        active
       )
     `,
     )
@@ -65,11 +65,11 @@ export async function getTenantBySlug(
   return data
 }
 
-/** Ventanas de todos los servicios activos (pueden repetirse). */
-export function collectAvailabilityWindows(
-  services: TenantService[],
-): TenantServiceAvailability[] {
-  return services.flatMap((service) => service.service_availability)
+/** Ventanas semanales del tenant (horario de negocio). */
+export function getTenantAvailabilityWindows(
+  tenant: Pick<TenantWithServices, 'tenant_availability'>,
+): TenantAvailabilityWindow[] {
+  return tenant.tenant_availability
 }
 
 /** Duración de referencia para calcular huecos antes de elegir servicio. */
