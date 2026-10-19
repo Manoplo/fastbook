@@ -90,6 +90,11 @@
   background: var(--fb-surface-container);
 }
 
+.service-images-modal__thumb--cover {
+  border-color: color-mix(in srgb, var(--fb-primary) 55%, var(--fb-outline-variant));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fb-primary) 35%, transparent);
+}
+
 .service-images-modal__thumb img {
   display: block;
   width: 100%;
@@ -208,6 +213,6 @@
 }
 
 .service-images-modal__primary:disabled {
-  opacity: 0.45;
+  opacity: 0.55;
   cursor: not-allowed;
 }

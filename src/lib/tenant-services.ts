@@ -10,6 +10,9 @@ export type CreateTenantServiceInput = {
   durationMinutes: number
   description?: string | null
   active?: boolean
+  imageUrl?: string | null
+  imageUrls?: string[]
+  youtubeUrl?: string | null
 }
 
 export type UpdateTenantServiceInput = {
@@ -19,6 +22,9 @@ export type UpdateTenantServiceInput = {
   durationMinutes?: number
   description?: string | null
   active?: boolean
+  imageUrl?: string | null
+  imageUrls?: string[]
+  youtubeUrl?: string | null
 }
 
 export async function listTenantServices(
@@ -81,6 +87,15 @@ export async function updateTenantService(
   }
   if (input.active !== undefined) {
     payload.active = input.active
+  }
+  if (input.imageUrl !== undefined) {
+    payload.image_url = input.imageUrl
+  }
+  if (input.imageUrls !== undefined) {
+    payload.image_urls = input.imageUrls
+  }
+  if (input.youtubeUrl !== undefined) {
+    payload.youtube_url = input.youtubeUrl
   }
 
   const { data, error } = await supabase

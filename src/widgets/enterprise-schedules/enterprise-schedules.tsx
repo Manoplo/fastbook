@@ -3,6 +3,15 @@ import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { ConfirmModal } from "@components/confirm-modal/confirm-modal";
 import type { EnterpriseDashboardOutletContext } from "@src/pages/enterprise-dashboard/enterprise-dashboard.types";
+import {
+  deleteAllServiceImages,
+  syncServiceGallery,
+} from "@src/lib/service-images-storage";
+import {
+  hydrateRemoteImagesFromUrls,
+  revokeLocalPreviewUrls,
+  type ServiceImageItem,
+} from "@src/lib/service-images-storage.utils";
 import { listTenantAvailability, replaceTenantAvailability } from "@src/lib/tenant-availability";
 import {
   createTenantService,
@@ -12,6 +21,7 @@ import {
   type TenantServiceRow,
 } from "@src/lib/tenant-services";
 import { ServiceImagesModal } from "./service-images-modal/service-images-modal";
+import type { ServiceGallerySavePayload } from "./service-images-modal/service-images-modal.types";
 import { ServicesCatalog } from "./services-catalog/services-catalog";
 import { UpgradeProModal } from "./upgrade-pro-modal/upgrade-pro-modal";
 import { WeeklyScheduleEditor } from "./weekly-schedule-editor/weekly-schedule-editor";
@@ -29,6 +39,18 @@ import {
 } from "./enterprise-schedules.utils";
 import "./enterprise-schedules.css";
 
+type PendingGallery = {
+  items: ServiceImageItem[];
+  youtubeUrl: string;
+};
+
+type ImagesModalContext = {
+  serviceId: string | null;
+  label: string;
+  initialItems: ServiceImageItem[];
+  initialYoutubeUrl: string;
+};
+
 export function EnterpriseSchedules() {
   const { tenant } = useOutletContext<EnterpriseDashboardOutletContext>();
   const queryClient = useQueryClient();
@@ -44,8 +66,10 @@ export function EnterpriseSchedules() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<UpgradeProReason>("service_limit");
   const [serviceToDelete, setServiceToDelete] = useState<TenantServiceRow | null>(null);
-  const [imagesModalOpen, setImagesModalOpen] = useState(false);
-  const [imagesModalLabel, setImagesModalLabel] = useState<string | undefined>(undefined);
+
+  const [pendingGallery, setPendingGallery] = useState<PendingGallery | null>(null);
+  const [imagesModal, setImagesModal] = useState<ImagesModalContext | null>(null);
+  const [gallerySaving, setGallerySaving] = useState(false);
 
   const availabilityQuery = useQuery({
     queryKey: ["tenant-availability", tenant.id],
@@ -60,6 +84,13 @@ export function EnterpriseSchedules() {
   if (availabilityQuery.data && !scheduleHydrated) {
     setScheduleHydrated(true);
     setDays(buildWeekDraftFromRows(availabilityQuery.data));
+  }
+
+  function clearPendingGallery() {
+    if (pendingGallery) {
+      revokeLocalPreviewUrls(pendingGallery.items);
+    }
+    setPendingGallery(null);
   }
 
   const saveScheduleMutation = useMutation({
@@ -82,7 +113,7 @@ export function EnterpriseSchedules() {
   });
 
   const saveServiceMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<{ softGalleryError?: string }> => {
       const parsed = parseServiceFormValues(formValues);
       if (!parsed) {
         throw new Error("Revisa nombre, duración y precio del servicio.");
@@ -96,7 +127,8 @@ export function EnterpriseSchedules() {
           setUpgradeOpen(true);
           throw new Error("Límite del plan gratuito alcanzado.");
         }
-        return createTenantService({
+
+        const created = await createTenantService({
           tenantId: tenant.id,
           name: parsed.name,
           price: parsed.price,
@@ -104,13 +136,40 @@ export function EnterpriseSchedules() {
           description: parsed.description,
           active: parsed.active,
         });
+
+        const gallery = pendingGallery;
+        if (!gallery || (gallery.items.length === 0 && !gallery.youtubeUrl.trim())) {
+          return {};
+        }
+
+        try {
+          await syncServiceGallery({
+            tenantId: tenant.id,
+            serviceId: created.id,
+            items: gallery.items,
+            initialRemotePaths: [],
+            youtubeUrl: gallery.youtubeUrl,
+          });
+          revokeLocalPreviewUrls(gallery.items);
+          setPendingGallery(null);
+          return {};
+        } catch (error) {
+          revokeLocalPreviewUrls(gallery.items);
+          setPendingGallery(null);
+          return {
+            softGalleryError:
+              error instanceof Error
+                ? error.message
+                : "No se pudieron subir las imágenes.",
+          };
+        }
       }
 
       if (!editingServiceId) {
         throw new Error("No hay servicio seleccionado.");
       }
 
-      return updateTenantService({
+      await updateTenantService({
         id: editingServiceId,
         name: parsed.name,
         price: parsed.price,
@@ -118,13 +177,21 @@ export function EnterpriseSchedules() {
         description: parsed.description,
         active: parsed.active,
       });
+      return {};
     },
-    onSuccess: async () => {
-      setServiceError(null);
+    onSuccess: async (result) => {
       setEditingServiceId(null);
       setFormValues(EMPTY_SERVICE_FORM);
       await queryClient.invalidateQueries({ queryKey: ["tenant-services", tenant.id] });
       await queryClient.invalidateQueries({ queryKey: ["tenant", tenant.slug] });
+
+      if (result.softGalleryError) {
+        setServiceError(
+          `Servicio creado, pero no se pudieron subir las imágenes (${result.softGalleryError}). Ábrelo desde la card para reintentar.`,
+        );
+        return;
+      }
+      setServiceError(null);
     },
     onError: (error: Error) => {
       if (error.message.includes("Límite del plan")) {
@@ -136,7 +203,13 @@ export function EnterpriseSchedules() {
   });
 
   const deleteServiceMutation = useMutation({
-    mutationFn: (serviceId: string) => deleteTenantService(serviceId),
+    mutationFn: async (service: TenantServiceRow) => {
+      await deleteTenantService(service.id);
+      await deleteAllServiceImages({
+        tenantId: tenant.id,
+        serviceId: service.id,
+      });
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["tenant-services", tenant.id] });
       await queryClient.invalidateQueries({ queryKey: ["tenant", tenant.slug] });
@@ -154,14 +227,23 @@ export function EnterpriseSchedules() {
       openUpgrade("service_limit");
       return;
     }
+    clearPendingGallery();
     setEditingServiceId("new");
     setFormValues(EMPTY_SERVICE_FORM);
     setServiceError(null);
   }
 
   function handleStartEdit(service: TenantServiceRow) {
+    clearPendingGallery();
     setEditingServiceId(service.id);
     setFormValues(serviceToFormValues(service));
+    setServiceError(null);
+  }
+
+  function handleCancelEdit() {
+    clearPendingGallery();
+    setEditingServiceId(null);
+    setFormValues(EMPTY_SERVICE_FORM);
     setServiceError(null);
   }
 
@@ -170,8 +252,54 @@ export function EnterpriseSchedules() {
   }
 
   function handleOpenServiceImages(service: TenantServiceRow | null) {
-    setImagesModalLabel(service?.name ?? (editingServiceId === "new" ? "Nuevo servicio" : undefined));
-    setImagesModalOpen(true);
+    if (service) {
+      setImagesModal({
+        serviceId: service.id,
+        label: service.name,
+        initialItems: hydrateRemoteImagesFromUrls(service.image_urls ?? []),
+        initialYoutubeUrl: service.youtube_url ?? "",
+      });
+      return;
+    }
+
+    setImagesModal({
+      serviceId: null,
+      label: editingServiceId === "new" ? "Nuevo servicio" : "Servicio",
+      initialItems: pendingGallery?.items ?? [],
+      initialYoutubeUrl: pendingGallery?.youtubeUrl ?? "",
+    });
+  }
+
+  async function handleGallerySave(payload: ServiceGallerySavePayload) {
+    if (!imagesModal) {
+      return;
+    }
+
+    if (!imagesModal.serviceId) {
+      setPendingGallery({
+        items: payload.items,
+        youtubeUrl: payload.youtubeUrl,
+      });
+      setImagesModal(null);
+      return;
+    }
+
+    setGallerySaving(true);
+    try {
+      await syncServiceGallery({
+        tenantId: tenant.id,
+        serviceId: imagesModal.serviceId,
+        items: payload.items,
+        initialRemotePaths: payload.initialRemotePaths,
+        youtubeUrl: payload.youtubeUrl,
+      });
+      revokeLocalPreviewUrls(payload.items);
+      setImagesModal(null);
+      await queryClient.invalidateQueries({ queryKey: ["tenant-services", tenant.id] });
+      await queryClient.invalidateQueries({ queryKey: ["tenant", tenant.slug] });
+    } finally {
+      setGallerySaving(false);
+    }
   }
 
   async function handleConfirmDelete() {
@@ -180,9 +308,11 @@ export function EnterpriseSchedules() {
     }
 
     const deletedId = serviceToDelete.id;
-    await deleteServiceMutation.mutateAsync(deletedId);
+    await deleteServiceMutation.mutateAsync(serviceToDelete);
+    setServiceToDelete(null);
 
     if (editingServiceId === deletedId) {
+      clearPendingGallery();
       setEditingServiceId(null);
       setFormValues(EMPTY_SERVICE_FORM);
       setServiceError(null);
@@ -245,11 +375,7 @@ export function EnterpriseSchedules() {
           onFormChange={setFormValues}
           onStartCreate={handleStartCreate}
           onStartEdit={handleStartEdit}
-          onCancelEdit={() => {
-            setEditingServiceId(null);
-            setFormValues(EMPTY_SERVICE_FORM);
-            setServiceError(null);
-          }}
+          onCancelEdit={handleCancelEdit}
           onSubmit={() => {
             void saveServiceMutation.mutateAsync();
           }}
@@ -267,19 +393,30 @@ export function EnterpriseSchedules() {
         }}
       />
 
-      <ServiceImagesModal
-        open={imagesModalOpen}
-        serviceLabel={imagesModalLabel}
-        onClose={() => {
-          setImagesModalOpen(false);
-        }}
-      />
+      {imagesModal ? (
+        <ServiceImagesModal
+          key={`${imagesModal.serviceId ?? "new"}:${imagesModal.label}`}
+          open
+          serviceLabel={imagesModal.label}
+          initialItems={imagesModal.initialItems}
+          initialYoutubeUrl={imagesModal.initialYoutubeUrl}
+          isSaving={gallerySaving}
+          onClose={() => {
+            if (!gallerySaving) {
+              setImagesModal(null);
+            }
+          }}
+          onSave={handleGallerySave}
+        />
+      ) : null}
 
       <ConfirmModal
         open={Boolean(serviceToDelete)}
         title="Eliminar servicio"
         description={
-          serviceToDelete ? `¿Eliminar el servicio “${serviceToDelete.name}”? Esta acción no se puede deshacer.` : ""
+          serviceToDelete
+            ? `¿Eliminar el servicio “${serviceToDelete.name}”? Esta acción no se puede deshacer.`
+            : ""
         }
         confirmLabel="Eliminar"
         confirmingLabel="Eliminando…"

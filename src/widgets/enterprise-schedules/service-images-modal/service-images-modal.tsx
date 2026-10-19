@@ -3,7 +3,9 @@ import classNames from 'classnames'
 import { CloseIcon } from '@components/icons/close-icon'
 import { ImageIcon } from '@components/icons/image-icon'
 import { Modal } from '@components/modal/modal'
-import type { ServiceImageDraft, ServiceImagesModalProps } from './service-images-modal.types'
+import type { LocalServiceImage, ServiceImageItem } from '@src/lib/service-images-storage.utils'
+import { previewSrcForItem } from '@src/lib/service-images-storage.utils'
+import type { ServiceImagesModalProps } from './service-images-modal.types'
 import {
   MAX_IMAGE_FILE_BYTES,
   MAX_SERVICE_IMAGES,
@@ -22,32 +24,73 @@ function nextDraftId(): string {
   return `img-draft-${draftIdCounter}`
 }
 
+function remotePathsFromItems(items: ServiceImageItem[]): string[] {
+  return items
+    .filter((item): item is Extract<ServiceImageItem, { kind: 'remote' }> => item.kind === 'remote')
+    .map((item) => item.storagePath)
+}
+
+function parentOwnedLocalIdsFromItems(items: ServiceImageItem[]): string[] {
+  return items.filter((item) => item.kind === 'local').map((item) => item.id)
+}
+
+function revokeCancelLocals(
+  items: ServiceImageItem[],
+  parentOwnedLocalIds: ReadonlySet<string>,
+): void {
+  for (const item of items) {
+    if (item.kind === 'local' && !parentOwnedLocalIds.has(item.id)) {
+      URL.revokeObjectURL(item.previewUrl)
+    }
+  }
+}
+
+function thumbMetaLabel(image: ServiceImageItem, index: number): string {
+  const parts: string[] = []
+  if (index === 0) {
+    parts.push('Portada')
+  }
+  if (image.kind === 'local') {
+    parts.push(
+      `${(image.compressedSize / 1024).toFixed(0)} KB${image.usedWebp ? '' : ' · JPEG'}`,
+    )
+  } else if (index !== 0) {
+    parts.push('Guardada')
+  }
+  return parts.join(' · ')
+}
+
+/**
+ * Debe montarse solo mientras la galería está abierta (el padre desmonta al cerrar).
+ * Así el estado se inicializa limpio con initialItems / youtube sin sync en render.
+ */
 export function ServiceImagesModal({
   open,
   onClose,
   serviceLabel,
+  initialItems = [],
+  initialYoutubeUrl = '',
+  isSaving = false,
+  onSave,
 }: ServiceImagesModalProps) {
   const inputId = useId()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [images, setImages] = useState<ServiceImageDraft[]>([])
-  const [youtubeUrl, setYoutubeUrl] = useState('')
+
+  const [items, setItems] = useState<ServiceImageItem[]>(() => [...initialItems])
+  const [youtubeUrl, setYoutubeUrl] = useState(initialYoutubeUrl)
+  const [initialRemotePaths] = useState(() => remotePathsFromItems(initialItems))
+  const [parentOwnedLocalIds] = useState(() => new Set(parentOwnedLocalIdsFromItems(initialItems)))
+
   const [isDragging, setIsDragging] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  function resetDrafts() {
-    for (const image of images) {
-      URL.revokeObjectURL(image.previewUrl)
-    }
-    setImages([])
-    setYoutubeUrl('')
-    setIsDragging(false)
-    setIsProcessing(false)
-    setErrorMessage(null)
-  }
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   function handleClose() {
-    resetDrafts()
+    if (isSaving || isSubmitting) {
+      return
+    }
+    revokeCancelLocals(items, parentOwnedLocalIds)
     onClose()
   }
 
@@ -57,7 +100,7 @@ export function ServiceImagesModal({
       return
     }
 
-    const { accepted, rejectedForLimit } = takeFilesWithinLimit(images.length, incoming)
+    const { accepted, rejectedForLimit } = takeFilesWithinLimit(items.length, incoming)
     const messages: string[] = []
 
     if (rejectedForLimit > 0) {
@@ -82,13 +125,14 @@ export function ServiceImagesModal({
     setIsProcessing(true)
     setErrorMessage(messages[0] ?? null)
 
-    const prepared: ServiceImageDraft[] = []
+    const prepared: LocalServiceImage[] = []
     try {
       for (const file of validFiles) {
         const converted = await convertFileToWebp(file)
         const previewUrl = URL.createObjectURL(converted.blob)
         const baseName = file.name.replace(/\.[^.]+$/, '') || 'imagen'
         prepared.push({
+          kind: 'local',
           id: nextDraftId(),
           previewUrl,
           blob: converted.blob,
@@ -100,7 +144,7 @@ export function ServiceImagesModal({
         })
       }
 
-      setImages((prev) => [...prev, ...prepared])
+      setItems((prev) => [...prev, ...prepared])
     } catch (error) {
       for (const draft of prepared) {
         URL.revokeObjectURL(draft.previewUrl)
@@ -114,9 +158,9 @@ export function ServiceImagesModal({
   }
 
   function removeImage(id: string) {
-    setImages((prev) => {
+    setItems((prev) => {
       const target = prev.find((image) => image.id === id)
-      if (target) {
+      if (target?.kind === 'local') {
         URL.revokeObjectURL(target.previewUrl)
       }
       return prev.filter((image) => image.id !== id)
@@ -124,10 +168,30 @@ export function ServiceImagesModal({
     setErrorMessage(null)
   }
 
-  const slotsLeft = MAX_SERVICE_IMAGES - images.length
-  const title = serviceLabel
-    ? `Galería · ${serviceLabel}`
-    : 'Galería del servicio'
+  async function handleSave() {
+    if (isSaving || isSubmitting || isProcessing) {
+      return
+    }
+    setIsSubmitting(true)
+    setErrorMessage(null)
+    try {
+      await onSave({
+        items,
+        youtubeUrl,
+        initialRemotePaths,
+      })
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'No se pudo guardar la galería.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const slotsLeft = MAX_SERVICE_IMAGES - items.length
+  const busy = isProcessing || isSaving || isSubmitting
+  const title = serviceLabel ? `Galería · ${serviceLabel}` : 'Galería del servicio'
 
   return (
     <Modal
@@ -136,36 +200,44 @@ export function ServiceImagesModal({
       onClose={handleClose}
       titleId="service-images-modal-title"
       className="service-images-modal"
+      closeOnBackdrop={!busy}
       footer={
         <>
-          <button type="button" className="service-images-modal__secondary" onClick={handleClose}>
+          <button
+            type="button"
+            className="service-images-modal__secondary"
+            onClick={handleClose}
+            disabled={busy}
+          >
             Cancelar
           </button>
           <button
             type="button"
             className="service-images-modal__primary"
-            disabled
-            title="La subida se activará en una próxima iteración"
+            onClick={() => {
+              void handleSave()
+            }}
+            disabled={busy}
           >
-            Guardar galería
+            {busy && !isProcessing ? 'Guardando…' : 'Guardar galería'}
           </button>
         </>
       }
     >
       <p className="service-images-modal__lead">
-        Arrastra hasta {MAX_SERVICE_IMAGES} imágenes o selecciónalas desde tu dispositivo. Se
-        convertirán a WebP antes de subirlas.
+        Arrastra hasta {MAX_SERVICE_IMAGES} imágenes o selecciónalas desde tu dispositivo. La
+        primera será la portada. Se convertirán a WebP antes de subirlas.
       </p>
 
       <div
         className={classNames('service-images-modal__dropzone', {
           'service-images-modal__dropzone--active': isDragging,
-          'service-images-modal__dropzone--disabled': isProcessing || slotsLeft === 0,
+          'service-images-modal__dropzone--disabled': busy || slotsLeft === 0,
         })}
         onDragEnter={(event) => {
           event.preventDefault()
           event.stopPropagation()
-          if (slotsLeft > 0 && !isProcessing) {
+          if (slotsLeft > 0 && !busy) {
             setIsDragging(true)
           }
         }}
@@ -182,13 +254,13 @@ export function ServiceImagesModal({
           event.preventDefault()
           event.stopPropagation()
           setIsDragging(false)
-          if (isProcessing || slotsLeft === 0) {
+          if (busy || slotsLeft === 0) {
             return
           }
           void processFiles(event.dataTransfer.files)
         }}
         onClick={() => {
-          if (!isProcessing && slotsLeft > 0) {
+          if (!busy && slotsLeft > 0) {
             fileInputRef.current?.click()
           }
         }}
@@ -197,7 +269,7 @@ export function ServiceImagesModal({
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
-            if (!isProcessing && slotsLeft > 0) {
+            if (!busy && slotsLeft > 0) {
               fileInputRef.current?.click()
             }
           }
@@ -223,7 +295,7 @@ export function ServiceImagesModal({
           accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/*"
           multiple
           className="service-images-modal__file-input"
-          disabled={isProcessing || slotsLeft === 0}
+          disabled={busy || slotsLeft === 0}
           onChange={(event) => {
             const files = event.target.files
             if (files) {
@@ -234,15 +306,23 @@ export function ServiceImagesModal({
         />
       </div>
 
-      {images.length > 0 ? (
+      {items.length > 0 ? (
         <ul className="service-images-modal__thumbs" aria-label="Vista previa de imágenes">
-          {images.map((image) => (
-            <li key={image.id} className="service-images-modal__thumb">
-              <img src={image.previewUrl} alt="" />
+          {items.map((image, index) => (
+            <li
+              key={image.id}
+              className={classNames('service-images-modal__thumb', {
+                'service-images-modal__thumb--cover': index === 0,
+              })}
+            >
+              <img src={previewSrcForItem(image)} alt="" />
               <button
                 type="button"
                 className="service-images-modal__thumb-remove"
-                aria-label={`Quitar ${image.fileName}`}
+                aria-label={
+                  image.kind === 'local' ? `Quitar ${image.fileName}` : 'Quitar imagen'
+                }
+                disabled={busy}
                 onClick={() => {
                   removeImage(image.id)
                 }}
@@ -250,8 +330,7 @@ export function ServiceImagesModal({
                 <CloseIcon className="service-images-modal__thumb-remove-icon" />
               </button>
               <span className="service-images-modal__thumb-meta">
-                {(image.compressedSize / 1024).toFixed(0)} KB
-                {image.usedWebp ? '' : ' · JPEG'}
+                {thumbMetaLabel(image, index)}
               </span>
             </li>
           ))}
@@ -264,6 +343,7 @@ export function ServiceImagesModal({
           type="url"
           value={youtubeUrl}
           placeholder="https://www.youtube.com/watch?v=…"
+          disabled={busy}
           onChange={(event) => {
             setYoutubeUrl(event.target.value)
           }}
@@ -275,11 +355,6 @@ export function ServiceImagesModal({
           {errorMessage}
         </p>
       ) : null}
-
-      <p className="service-images-modal__footnote">
-        La subida a Storage se activará en breve. Por ahora puedes probar la selección y la
-        compresión.
-      </p>
     </Modal>
   )
 }

@@ -127,7 +127,8 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] **Horarios y Servicios** (`/schedules`): UI Stitch + CRUD `tenant_availability` / `services`
 - [x] Migración `tenant_availability_and_pro`: `tenants.is_pro`, horario a nivel tenant; drop `service_availability`
 - [x] Límites free unificados en modal PRO (máx. 2 servicios, sin imagen); CTA → `/pricing` (pendiente)
-- [x] **Galería Pro (UI + WebP + BBDD/Storage):** modal drag & drop (máx. 9, 15 MB/archivo), conversión a WebP (`canvas.toBlob` + fallback JPEG), columnas `services.image_urls` / `youtube_url`, bucket `service-images` + RLS owner. Upload a Storage **aún desactivado** (botón Guardar disabled).
+- [x] **Galería Pro (UI + WebP + BBDD/Storage):** modal drag & drop (máx. 9, 15 MB/archivo), conversión a WebP (`canvas.toBlob` + fallback JPEG), columnas `services.image_urls` / `youtube_url`, bucket `service-images` + RLS owner.
+- [x] **Upload Storage + edición:** sync diff (upload/delete), hidratar thumbs desde URLs públicas, portada = primera (`image_url`), drafts en servicio new → create luego sync (soft-fail de imágenes), cleanup Storage al borrar servicio.
 
 ### Fuera de alcance deliberado (Agenda Stitch)
 
@@ -141,10 +142,9 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 
 ### Siguiente
 
-1. **Upload real** de la galería a Storage (`service-images/{tenant_id}/{service_id}/…`) + persistir `image_urls` / `youtube_url` / portada `image_url`.
-2. Subir el cupo UI de 9 → 10 para alinear con el check BBDD (o documentar 9+portada).
-3. Acciones sobre citas (cancelar / completar en BBDD) si se quiere ir más allá del estado derivado por hora.
-4. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
+1. Reorder DnD de miniaturas / elegir portada explícita (hoy: orden = lista, primera = portada).
+2. Acciones sobre citas (cancelar / completar en BBDD) si se quiere ir más allá del estado derivado por hora.
+3. (Más adelante) Página `/pricing` + enforcement server-side de límites free; galería completa en ficha pública.
 
 Detalle operativo: ver `handoff.md`.
 
