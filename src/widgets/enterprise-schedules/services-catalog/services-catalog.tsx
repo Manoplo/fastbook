@@ -1,17 +1,18 @@
-import classNames from 'classnames'
-import { AddIcon } from '@components/icons/add-icon'
-import { DeleteIcon } from '@components/icons/delete-icon'
-import { EditIcon } from '@components/icons/edit-icon'
-import { ImageIcon } from '@components/icons/image-icon'
-import { LockIcon } from '@components/icons/lock-icon'
+import classNames from "classnames";
+import { AddIcon } from "@components/icons/add-icon";
+import { DeleteIcon } from "@components/icons/delete-icon";
+import { EditIcon } from "@components/icons/edit-icon";
+import { ImageIcon } from "@components/icons/image-icon";
+import { LockIcon } from "@components/icons/lock-icon";
+import type { TenantServiceRow } from "@src/lib/tenant-services";
 import {
   FREE_MAX_SERVICES,
   canAddService,
   canUploadServiceImage,
   formatPriceEuro,
-} from '../enterprise-schedules.utils'
-import type { ServicesCatalogProps } from './services-catalog.types'
-import './services-catalog.css'
+} from "../enterprise-schedules.utils";
+import type { ServicesCatalogProps } from "./services-catalog.types";
+import "./services-catalog.css";
 
 export function ServicesCatalog({
   services,
@@ -27,23 +28,30 @@ export function ServicesCatalog({
   onSubmit,
   onDelete,
   onRequestUpgrade,
+  onOpenServiceImages,
 }: ServicesCatalogProps) {
-  const allowAdd = canAddService({ isPro, serviceCount: services.length })
-  const allowImage = canUploadServiceImage(isPro)
-  const isCreating = editingServiceId === 'new'
+  const allowAdd = canAddService({ isPro, serviceCount: services.length });
+  const allowImage = canUploadServiceImage(isPro);
+  const isCreating = editingServiceId === "new";
+  const editingService =
+    editingServiceId && editingServiceId !== "new"
+      ? services.find((service) => service.id === editingServiceId) ?? null
+      : null;
 
   function handleAddClick() {
     if (!allowAdd) {
-      onRequestUpgrade('service_limit')
-      return
+      onRequestUpgrade("service_limit");
+      return;
     }
-    onStartCreate()
+    onStartCreate();
   }
 
-  function handleImageClick() {
+  function handleImageClick(service: TenantServiceRow | null) {
     if (!allowImage) {
-      onRequestUpgrade('image_upload')
+      onRequestUpgrade("image_upload");
+      return;
     }
+    onOpenServiceImages(service);
   }
 
   return (
@@ -55,7 +63,7 @@ export function ServicesCatalog({
           </h2>
           <p className="services-catalog__subtitle">
             {isPro
-              ? 'Gestiona los servicios visibles en tu página pública de reservas.'
+              ? "Gestiona los servicios visibles en tu página pública de reservas."
               : `Plan gratuito: hasta ${FREE_MAX_SERVICES} servicios activos.`}
           </p>
         </div>
@@ -75,15 +83,13 @@ export function ServicesCatalog({
             <li key={service.id} className="services-catalog__item">
               <button
                 type="button"
-                className={classNames('services-catalog__image', {
-                  'services-catalog__image--locked': !allowImage,
+                className={classNames("services-catalog__image", {
+                  "services-catalog__image--locked": !allowImage,
                 })}
-                onClick={handleImageClick}
-                aria-label={
-                  allowImage
-                    ? 'Subir imagen del servicio'
-                    : 'Imagen disponible en plan Pro'
-                }
+                onClick={() => {
+                  handleImageClick(service);
+                }}
+                aria-label={allowImage ? "Subir imagen del servicio" : "Imagen disponible en plan Pro"}
               >
                 {service.image_url ? (
                   <img src={service.image_url} alt="" />
@@ -106,19 +112,17 @@ export function ServicesCatalog({
                 <div className="services-catalog__title-row">
                   <h3 className="services-catalog__name">{service.name}</h3>
                   <span
-                    className={classNames('services-catalog__badge', {
-                      'services-catalog__badge--inactive': !service.active,
+                    className={classNames("services-catalog__badge", {
+                      "services-catalog__badge--inactive": !service.active,
                     })}
                   >
-                    {service.active ? 'Activo' : 'Inactivo'}
+                    {service.active ? "Activo" : "Inactivo"}
                   </span>
                 </div>
                 <p className="services-catalog__meta">
                   {service.duration_minutes} min · {formatPriceEuro(Number(service.price))}
                 </p>
-                {service.description ? (
-                  <p className="services-catalog__description">{service.description}</p>
-                ) : null}
+                {service.description ? <p className="services-catalog__description">{service.description}</p> : null}
               </div>
 
               <div className="services-catalog__actions">
@@ -127,7 +131,7 @@ export function ServicesCatalog({
                   className="services-catalog__icon-btn"
                   aria-label={`Editar ${service.name}`}
                   onClick={() => {
-                    onStartEdit(service)
+                    onStartEdit(service);
                   }}
                 >
                   <EditIcon className="services-catalog__action-icon" />
@@ -137,7 +141,7 @@ export function ServicesCatalog({
                   className="services-catalog__icon-btn services-catalog__icon-btn--danger"
                   aria-label={`Eliminar ${service.name}`}
                   onClick={() => {
-                    onDelete(service)
+                    onDelete(service);
                   }}
                 >
                   <DeleteIcon className="services-catalog__action-icon" />
@@ -152,13 +156,11 @@ export function ServicesCatalog({
         <form
           className="services-catalog__form"
           onSubmit={(event) => {
-            event.preventDefault()
-            onSubmit()
+            event.preventDefault();
+            onSubmit();
           }}
         >
-          <h3 className="services-catalog__form-title">
-            {isCreating ? 'Añadir nuevo servicio' : 'Editar servicio'}
-          </h3>
+          <h3 className="services-catalog__form-title">{isCreating ? "Añadir nuevo servicio" : "Editar servicio"}</h3>
 
           <div className="services-catalog__form-grid">
             <label className="services-catalog__field services-catalog__field--wide">
@@ -166,7 +168,7 @@ export function ServicesCatalog({
               <input
                 value={formValues.name}
                 onChange={(event) => {
-                  onFormChange({ ...formValues, name: event.target.value })
+                  onFormChange({ ...formValues, name: event.target.value });
                 }}
                 required
                 maxLength={120}
@@ -180,7 +182,7 @@ export function ServicesCatalog({
                 step={5}
                 value={formValues.durationMinutes}
                 onChange={(event) => {
-                  onFormChange({ ...formValues, durationMinutes: event.target.value })
+                  onFormChange({ ...formValues, durationMinutes: event.target.value });
                 }}
                 required
               />
@@ -191,7 +193,7 @@ export function ServicesCatalog({
                 inputMode="decimal"
                 value={formValues.price}
                 onChange={(event) => {
-                  onFormChange({ ...formValues, price: event.target.value })
+                  onFormChange({ ...formValues, price: event.target.value });
                 }}
                 required
               />
@@ -202,7 +204,7 @@ export function ServicesCatalog({
                 rows={3}
                 value={formValues.description}
                 onChange={(event) => {
-                  onFormChange({ ...formValues, description: event.target.value })
+                  onFormChange({ ...formValues, description: event.target.value });
                 }}
               />
             </label>
@@ -211,7 +213,7 @@ export function ServicesCatalog({
                 type="checkbox"
                 checked={formValues.active}
                 onChange={(event) => {
-                  onFormChange({ ...formValues, active: event.target.checked })
+                  onFormChange({ ...formValues, active: event.target.checked });
                 }}
               />
               <span>Servicio activo (visible en la página pública)</span>
@@ -220,17 +222,15 @@ export function ServicesCatalog({
 
           <button
             type="button"
-            className={classNames('services-catalog__image-upload', {
-              'services-catalog__image-upload--locked': !allowImage,
+            className={classNames("services-catalog__image-upload", {
+              "services-catalog__image-upload--locked": !allowImage,
             })}
-            onClick={handleImageClick}
+            onClick={() => {
+              handleImageClick(editingService);
+            }}
           >
             <ImageIcon className="services-catalog__image-upload-icon" />
-            <span>
-              {allowImage
-                ? 'Subir imagen del servicio'
-                : 'Subida de imagen solo en plan Pro'}
-            </span>
+            <span>{allowImage ? "Galería e imágenes del servicio" : "Subida de imagen solo en plan Pro"}</span>
             {!allowImage ? <LockIcon className="services-catalog__lock-icon" /> : null}
           </button>
 
@@ -241,20 +241,15 @@ export function ServicesCatalog({
           ) : null}
 
           <div className="services-catalog__form-actions">
-            <button
-              type="button"
-              className="services-catalog__secondary"
-              onClick={onCancelEdit}
-              disabled={isSaving}
-            >
+            <button type="button" className="services-catalog__secondary" onClick={onCancelEdit} disabled={isSaving}>
               Cancelar
             </button>
             <button type="submit" className="services-catalog__primary" disabled={isSaving}>
-              {isSaving ? 'Guardando…' : isCreating ? 'Crear servicio' : 'Guardar cambios'}
+              {isSaving ? "Guardando…" : isCreating ? "Crear servicio" : "Guardar cambios"}
             </button>
           </div>
         </form>
       ) : null}
     </section>
-  )
+  );
 }

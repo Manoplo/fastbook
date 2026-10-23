@@ -1,5 +1,22 @@
 # Fastbook — Roadmap
 
+## COMANDOS SQL RECURRENTES
+
+Ejecutar en el SQL Editor de Supabase (proyecto `fastbook` / `ptgltexbfxjqmyozcavt`).
+
+```sql
+-- Activar Pro (tenant manoplo)
+update public.tenants set is_pro = true where slug = 'manoplo';
+
+-- Desactivar Pro (volver a free)
+update public.tenants set is_pro = false where slug = 'manoplo';
+
+-- Comprobar estado
+select slug, name, is_pro from public.tenants where slug = 'manoplo';
+```
+
+Sustituye `'manoplo'` por el `slug` del tenant que quieras conmutar.
+
 ## Visión
 
 Aplicación **multitenant** de reserva de citas, con plan **gratuito** y **features premium**.
@@ -110,6 +127,8 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] **Horarios y Servicios** (`/schedules`): UI Stitch + CRUD `tenant_availability` / `services`
 - [x] Migración `tenant_availability_and_pro`: `tenants.is_pro`, horario a nivel tenant; drop `service_availability`
 - [x] Límites free unificados en modal PRO (máx. 2 servicios, sin imagen); CTA → `/pricing` (pendiente)
+- [x] **Galería Pro (UI + WebP + BBDD/Storage):** modal drag & drop (máx. 9, 15 MB/archivo), conversión a WebP (`canvas.toBlob` + fallback JPEG), columnas `services.image_urls` / `youtube_url`, bucket `service-images` + RLS owner.
+- [x] **Upload Storage + edición:** sync diff (upload/delete), hidratar thumbs desde URLs públicas, portada = primera (`image_url`), drafts en servicio new → create luego sync (soft-fail de imágenes), cleanup Storage al borrar servicio.
 
 ### Fuera de alcance deliberado (Agenda Stitch)
 
@@ -119,14 +138,13 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - “Nueva Cita” manual / huecos vacíos clicables
 - Persistencia de estados `in_progress` / `completed` (hoy se derivan de la hora; BBDD solo `confirmed` \| `cancelled`)
 - Chips/cards de upsell free repetidos (Stitch); se unificó en modal
-- Upload real a Storage / Stripe / página `/pricing`
+- Stripe / página `/pricing`
 
 ### Siguiente
 
-1. Acciones sobre citas (cancelar / completar en BBDD) si se quiere ir más allá del estado derivado por hora.
-2. Decidir si “Validar QR” entra en MVP web (cámara vs. input de código).
-3. Verificar Redirect URLs de Supabase incluyen `/enterprise/login` (dev + prod).
-4. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
+1. Reorder DnD de miniaturas / elegir portada explícita (hoy: orden = lista, primera = portada).
+2. Acciones sobre citas (cancelar / completar en BBDD) si se quiere ir más allá del estado derivado por hora.
+3. (Más adelante) Página `/pricing` + enforcement server-side de límites free; galería completa en ficha pública.
 
 Detalle operativo: ver `handoff.md`.
 
@@ -159,6 +177,8 @@ erDiagram
     numeric price
     text description
     text image_url
+    text_array image_urls
+    text youtube_url
     text_array tags
     integer duration_minutes
     boolean active
@@ -193,7 +213,7 @@ erDiagram
 | Tabla | Qué es |
 |---|---|
 | `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `is_pro` (plan). `booking_note` antes de confirmar. |
-| `services` | Catálogo por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. Free: máx. 2 (UI). |
+| `services` | Catálogo por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. Free: máx. 2 (UI). Pro: `image_urls` (≤10) + `youtube_url`; `image_url` portada/legacy. |
 | `tenant_availability` | Ventanas semanales del negocio (`day_of_week` 0=dom…6=sáb + `start_time`/`end_time`). |
 | `bookings` | Reserva concreta. Unique `(service_id, booking_date, start_time)` evita dobles. Status: `confirmed` \| `cancelled`. |
 
@@ -221,6 +241,7 @@ erDiagram
 | [`20260930000000_tenant_auth.sql`](supabase/migrations/20260930000000_tenant_auth.sql) | `owner_id` + RLS owner |
 | [`20260930000001_tenant_auth_private_helper.sql`](supabase/migrations/20260930000001_tenant_auth_private_helper.sql) | Helper privado follow-up |
 | [`20261012000000_tenant_availability_and_pro.sql`](supabase/migrations/20261012000000_tenant_availability_and_pro.sql) | `is_pro` + `tenant_availability`; drop `service_availability` |
+| [`20261018000000_service_images_gallery_and_storage.sql`](supabase/migrations/20261018000000_service_images_gallery_and_storage.sql) | `image_urls` + `youtube_url`; bucket `service-images` + policies |
 
 **Proyecto Supabase:** `fastbook` (`ptgltexbfxjqmyozcavt`, `eu-west-1`).
 
