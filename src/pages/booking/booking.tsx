@@ -72,6 +72,7 @@ export function BookingPage() {
   )
 
   const [confirmedEmail, setConfirmedEmail] = useState('')
+  const [checkInToken, setCheckInToken] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const customerForm = useForm<CustomerDetailsFormValues>({
@@ -178,7 +179,7 @@ export function BookingPage() {
     setSubmitError(null)
 
     try {
-      await createBookingMutation.mutateAsync({
+      const result = await createBookingMutation.mutateAsync({
         tenantId: tenant.id,
         serviceId: selectedService.id,
         bookingDate: dateKey,
@@ -190,6 +191,7 @@ export function BookingPage() {
         notes,
       })
       setConfirmedEmail(values.email.trim().toLowerCase())
+      setCheckInToken(result.checkInToken)
       setStep(3)
     } catch (error) {
       if (error instanceof BookingConflictError) {
@@ -204,6 +206,7 @@ export function BookingPage() {
     resetSelection()
     resetCustomerForm(CUSTOMER_DETAILS_DEFAULT_VALUES)
     setConfirmedEmail('')
+    setCheckInToken('')
     setSubmitError(null)
   }
 
@@ -321,13 +324,15 @@ export function BookingPage() {
           </FormProvider>
         ) : null}
 
-        {step === 3 && selectedService && dateKey && startTime ? (
+        {step === 3 && selectedService && dateKey && startTime && checkInToken ? (
           <BookingConfirmation
             tenantName={tenant.name}
+            tenantSlug={tenant.slug}
             serviceName={selectedService.name}
             dateKey={dateKey}
             startTime={startTime}
             customerEmail={confirmedEmail}
+            checkInToken={checkInToken}
             onNewBooking={handleNewBooking}
           />
         ) : null}
