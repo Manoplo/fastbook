@@ -4,6 +4,7 @@ export type ServiceListItem = {
   price: number
   description: string | null
   image_url: string | null
+  image_urls?: string[] | null
   tags: string[] | null
   duration_minutes: number
 }
