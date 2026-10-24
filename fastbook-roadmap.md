@@ -129,6 +129,7 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] Límites free unificados en modal PRO (máx. 2 servicios, sin imagen); CTA → `/pricing` (pendiente)
 - [x] **Galería Pro (UI + WebP + BBDD/Storage):** modal drag & drop (máx. 9, 15 MB/archivo), conversión a WebP (`canvas.toBlob` + fallback JPEG), columnas `services.image_urls` / `youtube_url`, bucket `service-images` + RLS owner.
 - [x] **Upload Storage + edición:** sync diff (upload/delete), hidratar thumbs desde URLs públicas, portada = primera (`image_url`), drafts en servicio new → create luego sync (soft-fail de imágenes), cleanup Storage al borrar servicio.
+- [x] **Galería pública en ficha de servicio:** `getTenantBySlug` trae `image_urls`; thumb de portada en `ServiceList` abre `ServiceGallery` (nav lateral + thumbs derecha); click en imagen → lightbox fullscreen con zoom ± / rueda / pan, cierre Esc o X.
 
 ### Fuera de alcance deliberado (Agenda Stitch)
 
@@ -142,9 +143,9 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 
 ### Siguiente
 
-1. Reorder DnD de miniaturas / elegir portada explícita (hoy: orden = lista, primera = portada).
+1. Reorder DnD de miniaturas / elegir portada explícita en dashboard (hoy: orden = lista, primera = portada).
 2. Acciones sobre citas (cancelar / completar en BBDD) si se quiere ir más allá del estado derivado por hora.
-3. (Más adelante) Página `/pricing` + enforcement server-side de límites free; galería completa en ficha pública.
+3. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
 
 Detalle operativo: ver `handoff.md`.
 

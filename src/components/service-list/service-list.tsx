@@ -1,6 +1,9 @@
+import { useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import classNames from 'classnames'
 import { CheckIcon } from '@components/icons/check-icon'
 import { ScheduleIcon } from '@components/icons/schedule-icon'
+import { ServiceGallery } from '@components/service-gallery/service-gallery'
+import { resolveServiceGalleryUrls } from '@components/service-gallery/service-gallery.utils'
 import type { ServiceListItem, ServiceListProps } from './service-list.types'
 import {
   formatDurationMinutes,
@@ -9,37 +12,72 @@ import {
 } from './service-list.utils'
 import './service-list.css'
 
+type GalleryState = {
+  serviceName: string
+  images: string[]
+}
+
 function ServiceCard({
   service,
   selected,
   onSelect,
+  onOpenGallery,
 }: {
   service: ServiceListItem
   selected: boolean
   onSelect: () => void
+  onOpenGallery: (images: string[]) => void
 }) {
   const tags = service.tags ?? []
-  const hasImage = Boolean(service.image_url)
+  const galleryImages = resolveServiceGalleryUrls(
+    service.image_url,
+    service.image_urls,
+  )
+  const hasImage = galleryImages.length > 0
+  const coverSrc = galleryImages[0]
+  const extraCount = galleryImages.length > 1 ? galleryImages.length : 0
+
+  function handleCardKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onSelect()
+    }
+  }
 
   return (
-    <button
-      type="button"
+    <div
       className={classNames('service-list__card', {
         'service-list__card--selected': selected,
         'service-list__card--no-image': !hasImage,
       })}
+      role="button"
+      tabIndex={0}
       aria-pressed={selected}
       onClick={onSelect}
+      onKeyDown={handleCardKeyDown}
     >
       <div className="service-list__card-main">
-        {hasImage ? (
-          <div className="service-list__thumb">
+        {hasImage && coverSrc ? (
+          <button
+            type="button"
+            className="service-list__thumb"
+            aria-label={`Ver galería de ${service.name}`}
+            onClick={(event) => {
+              event.stopPropagation()
+              onOpenGallery(galleryImages)
+            }}
+          >
             <img
-              src={service.image_url!}
+              src={coverSrc}
               alt=""
               className="service-list__thumb-image"
             />
-          </div>
+            {extraCount > 1 ? (
+              <span className="service-list__thumb-count" aria-hidden="true">
+                {extraCount}
+              </span>
+            ) : null}
+          </button>
         ) : null}
 
         <div className="service-list__content">
@@ -93,7 +131,7 @@ function ServiceCard({
           )}
         </span>
       </div>
-    </button>
+    </div>
   )
 }
 
@@ -105,6 +143,8 @@ export function ServiceList({
   title = '3. Experiencia & servicios',
   subtitle = 'Selecciona el tratamiento adaptado a tus necesidades',
 }: ServiceListProps) {
+  const [gallery, setGallery] = useState<GalleryState | null>(null)
+
   const countLabel =
     services.length === 1
       ? '1 tratamiento disponible'
@@ -138,10 +178,23 @@ export function ServiceList({
               service={service}
               selected={value === service.id}
               onSelect={() => handleSelect(service.id)}
+              onOpenGallery={(images) =>
+                setGallery({ serviceName: service.name, images })
+              }
             />
           ))}
         </div>
       )}
+
+      {gallery ? (
+        <ServiceGallery
+          key={`${gallery.serviceName}-${gallery.images.join('|')}`}
+          open
+          images={gallery.images}
+          serviceName={gallery.serviceName}
+          onClose={() => setGallery(null)}
+        />
+      ) : null}
     </section>
   )
 }

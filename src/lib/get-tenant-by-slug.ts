@@ -13,6 +13,7 @@ export type TenantService = Pick<
   | 'price'
   | 'description'
   | 'image_url'
+  | 'image_urls'
   | 'tags'
   | 'duration_minutes'
   | 'active'
@@ -49,6 +50,7 @@ export async function getTenantBySlug(
         price,
         description,
         image_url,
+        image_urls,
         tags,
         duration_minutes,
         active
