@@ -146,12 +146,13 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] Migración `booking_check_in_token`: `bookings.check_in_token` (text unique not null + default)
 - [x] `createBooking` genera token en cliente, lo inserta y lo devuelve (sin `select` público en bookings)
 - [x] QR en step 3 (`qrcode.react`) con URL `{origin}/enterprise/{slug}/check-in/{token}`
-- [ ] Edge Function + Resend: email de confirmación (API key en secrets de Supabase)
+- [x] Edge Function `send-booking-confirmation` desplegada (Resend + QR CID; auth por webhook secret). Ver `supabase/functions/send-booking-confirmation/`
+- [ ] Secrets en Dashboard (`RESEND_API_KEY`, `APP_ORIGIN`, `BOOKING_CONFIRMATION_WEBHOOK_SECRET`) + Database Webhook INSERT en `bookings`
 - [ ] Ruta/pantalla tenant “Validar QR” + estados de cita (`checked_in` / completed / no-show) en BBDD
 
 ### Siguiente
 
-1. **Edge Function `send-booking-confirmation` + Resend** (preferible trigger/webhook `AFTER INSERT`; secret `RESEND_API_KEY` en Dashboard).
+1. **Configurar secrets + Database Webhook** (INSERT `bookings` → function) y probar un email real con Resend.
 2. Pantalla “Validar QR” en dashboard (cámara + código manual) y modelo de estados de cita.
 3. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
 4. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
