@@ -1,31 +1,41 @@
 # `send-booking-confirmation`
 
-Edge Function: email de confirmación de reserva vía **Resend**, con QR (CID) + enlace de check-in.
+Edge Function: email de confirmación vía **Resend**, con QR (CID) + enlace de check-in.
 
 URL: `https://ptgltexbfxjqmyozcavt.supabase.co/functions/v1/send-booking-confirmation`  
-`verify_jwt = false` — la auth es un secret propio (webhook / prueba manual).
+`verify_jwt = false`
 
-## Secrets (Dashboard → Edge Functions → Secrets)
+## Cómo se dispara (actual)
 
-| Secret | Obligatorio | Ejemplo |
-|---|---|---|
-| `RESEND_API_KEY` | sí | `re_…` (API key de Resend) |
-| `APP_ORIGIN` | sí | `http://localhost:5173` o URL de prod |
-| `BOOKING_CONFIRMATION_WEBHOOK_SECRET` | sí | string largo aleatorio |
-| `BOOKING_EMAIL_FROM` | no | `Fastbook <onboarding@resend.dev>` (tests) o `Fastbook <noreply@tudominio.com>` |
+Tras un `INSERT` OK, el FE llama:
 
-`SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` los inyecta Supabase.
+```ts
+supabase.functions.invoke('send-booking-confirmation', {
+  body: { checkInToken },
+})
+```
 
-## Disparo recomendado: Database Webhook
+(`create-booking.ts`, fire-and-forget: un fallo de email no rompe la reserva).
 
-Dashboard → Database → Webhooks → Create:
+También acepta webhook INSERT / `{ bookingId }` con secret (opcional).
 
-- Table: `bookings`
-- Events: **Insert**
-- URL: la de la function arriba
-- HTTP Headers:
-  - `Authorization` = `Bearer <mismo valor que BOOKING_CONFIRMATION_WEBHOOK_SECRET>`
-  - `Content-Type` = `application/json`
+## Secrets (Supabase → Edge Functions → Secrets)
+
+| Secret | Valor prod |
+|---|---|
+| `RESEND_API_KEY` | `re_…` |
+| `APP_ORIGIN` | `https://fastbook.es` |
+| `BOOKING_EMAIL_FROM` | `Fastbook <noreply@mail.fastbook.es>` (o el from verificado en Resend) |
+| `BOOKING_CONFIRMATION_WEBHOOK_SECRET` | string largo (solo si usas webhook/curl) |
+
+`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` los pone Supabase.
+
+## Preview Vercel (`*.vercel.app`) vs `APP_ORIGIN`
+
+- El **email** siempre usa `APP_ORIGIN` → enlaces/QR del mail apuntan a `https://fastbook.es/...`
+- El **QR en pantalla** usa `window.location.origin` → en preview será `https://fastbook-sepia.vercel.app/...`
+
+No bloquea el envío. Ojo: reservas de preview escriben en la **misma** BBDD y mandan mails reales (usa tu email al probar).
 
 ## Prueba manual
 
@@ -34,12 +44,5 @@ curl -i -X POST \
   'https://ptgltexbfxjqmyozcavt.supabase.co/functions/v1/send-booking-confirmation' \
   -H 'Authorization: Bearer <BOOKING_CONFIRMATION_WEBHOOK_SECRET>' \
   -H 'Content-Type: application/json' \
-  -d '{"bookingId":"<uuid-de-una-reserva>"}'
+  -d '{"bookingId":"<uuid>"}'
 ```
-
-Con Resend Free y `onboarding@resend.dev`, el `to` suele tener que ser tu propio email verificado en Resend.
-
-## Payload aceptado
-
-1. Webhook Supabase: `{ "type":"INSERT","table":"bookings","record":{ "id":"…" } }`
-2. Manual: `{ "bookingId":"…" }`

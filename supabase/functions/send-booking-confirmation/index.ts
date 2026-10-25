@@ -4,7 +4,7 @@ import QRCode from 'npm:qrcode@1.5.4'
 import { buildBookingConfirmationEmail } from './email.ts'
 import {
   bookingCheckInPath,
-  extractBookingId,
+  extractBookingLookup,
   formatBookingDateLabel,
   formatBookingTimeLabel,
   isAuthorized,
@@ -12,6 +12,19 @@ import {
 } from './utils.ts'
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
+
+const BOOKING_SELECT = `
+  id,
+  booking_date,
+  start_time,
+  end_time,
+  customer_name,
+  customer_email,
+  check_in_token,
+  status,
+  tenant:tenants!bookings_tenant_id_fkey ( id, slug, name ),
+  service:services!bookings_service_id_fkey ( id, name, duration_minutes )
+`
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
@@ -23,11 +36,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405)
-  }
-
-  const webhookSecret = Deno.env.get('BOOKING_CONFIRMATION_WEBHOOK_SECRET')
-  if (!isAuthorized(req, webhookSecret)) {
-    return jsonResponse({ error: 'Unauthorized' }, 401)
   }
 
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
@@ -50,12 +58,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ error: 'Invalid JSON body' }, 400)
   }
 
-  const bookingId = extractBookingId(body)
-  if (!bookingId) {
+  const webhookSecret = Deno.env.get('BOOKING_CONFIRMATION_WEBHOOK_SECRET')
+  if (!isAuthorized(req, webhookSecret, body)) {
+    return jsonResponse({ error: 'Unauthorized' }, 401)
+  }
+
+  const lookup = extractBookingLookup(body)
+  if (!lookup) {
     return jsonResponse(
       {
         error:
-          'Expected Database Webhook INSERT payload or { bookingId: string }',
+          'Expected webhook INSERT, { bookingId }, or { checkInToken }',
       },
       400,
     )
@@ -71,24 +84,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const { data: booking, error: bookingError } = await supabase
-    .from('bookings')
-    .select(
-      `
-      id,
-      booking_date,
-      start_time,
-      end_time,
-      customer_name,
-      customer_email,
-      check_in_token,
-      status,
-      tenant:tenants!bookings_tenant_id_fkey ( id, slug, name ),
-      service:services!bookings_service_id_fkey ( id, name, duration_minutes )
-    `,
-    )
-    .eq('id', bookingId)
-    .maybeSingle()
+  let bookingQuery = supabase.from('bookings').select(BOOKING_SELECT)
+  bookingQuery =
+    lookup.kind === 'id'
+      ? bookingQuery.eq('id', lookup.bookingId)
+      : bookingQuery.eq('check_in_token', lookup.checkInToken)
+
+  const { data: booking, error: bookingError } = await bookingQuery.maybeSingle()
 
   if (bookingError) {
     console.error('booking lookup failed', bookingError)

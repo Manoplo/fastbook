@@ -49,13 +49,23 @@ export async function createBooking(
     check_in_token: checkInToken,
   })
 
-  if (!error) {
-    return { checkInToken }
+  if (error) {
+    if (error.code === '23505') {
+      throw new BookingConflictError()
+    }
+    throw error
   }
 
-  if (error.code === '23505') {
-    throw new BookingConflictError()
-  }
+  // No bloquea la UX si Resend falla; el QR en pantalla ya está.
+  void supabase.functions
+    .invoke('send-booking-confirmation', {
+      body: { checkInToken },
+    })
+    .then(({ error: invokeError }) => {
+      if (invokeError) {
+        console.error('send-booking-confirmation invoke failed', invokeError)
+      }
+    })
 
-  throw error
+  return { checkInToken }
 }

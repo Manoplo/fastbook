@@ -168,7 +168,7 @@ export function BookingSummaryCard({
         <ul className="booking-summary-card__trust">
           <li className="booking-summary-card__trust-item">
             <VerifiedIcon className="booking-summary-card__trust-icon booking-summary-card__trust-icon--tertiary" />
-            <span>Cancelación gratuita hasta 24h antes de la cita</span>
+            <span>Reserva garantizada e inmediata. Código QR instantáneo al confirmar.</span>
           </li>
           <li className="booking-summary-card__trust-item">
             <LockIcon className="booking-summary-card__trust-icon booking-summary-card__trust-icon--primary" />

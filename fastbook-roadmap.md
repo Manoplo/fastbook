@@ -135,27 +135,31 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 
 - Chip verde “Abierto para reservas”
 - Métrica “Cabinas activas” / panel “Ocupación de espacios” (no aplica al modelo actual)
-- Botón “Validar QR” (posible en web vía cámara/`BarcodeDetector` o código manual; aplazado hasta decidir flujo)
 - “Nueva Cita” manual / huecos vacíos clicables
-- Persistencia de estados `in_progress` / `completed` (hoy se derivan de la hora; BBDD solo `confirmed` \| `cancelled`)
 - Chips/cards de upsell free repetidos (Stitch); se unificó en modal
 - Stripe / página `/pricing`
 
-### Confirmación + QR (rama `feat/qrcode-generator`)
+### Confirmación + QR + email ✅ (rama `feat/qrcode-generator`)
 
 - [x] Migración `booking_check_in_token`: `bookings.check_in_token` (text unique not null + default)
 - [x] `createBooking` genera token en cliente, lo inserta y lo devuelve (sin `select` público en bookings)
 - [x] QR en step 3 (`qrcode.react`) con URL `{origin}/enterprise/{slug}/check-in/{token}`
-- [x] Edge Function `send-booking-confirmation` desplegada (Resend + QR CID; auth por webhook secret). Ver `supabase/functions/send-booking-confirmation/`
-- [ ] Secrets en Dashboard (`RESEND_API_KEY`, `APP_ORIGIN`, `BOOKING_CONFIRMATION_WEBHOOK_SECRET`) + Database Webhook INSERT en `bookings`
-- [ ] Ruta/pantalla tenant “Validar QR” + estados de cita (`checked_in` / completed / no-show) en BBDD
+- [x] Edge Function `send-booking-confirmation` (Resend + QR CID). Código: `supabase/functions/send-booking-confirmation/`
+- [x] Secrets prod (`APP_ORIGIN=https://fastbook.es`, Resend + from `mail.fastbook.es`)
+- [x] FE invoca la function tras crear reserva (`checkInToken`; fire-and-forget)
+- [x] `vercel.json` rewrite SPA + dominio `fastbook.es`
+- [ ] Verificación manual en prod (DNS Resend / mails reales) — a cargo del owner al merge
 
-### Siguiente
+### Siguiente (prioridad)
 
-1. **Configurar secrets + Database Webhook** (INSERT `bookings` → function) y probar un email real con Resend.
-2. Pantalla “Validar QR” en dashboard (cámara + código manual) y modelo de estados de cita.
-3. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
-4. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
+1. **Validar QR en dashboard del tenant** → check-in de la cita:
+   - Modelo BBDD: `checked_in_at` y/o ampliar `status` (`checked_in` / `completed` / `no_show`) — hoy UI deriva estados por hora; BBDD solo `confirmed` \| `cancelled`.
+   - UI agenda “Validar QR”: cámara + input manual; ruta `/enterprise/:tenantSlug/check-in/:token` (ya codificada en el QR).
+   - Update autenticado (owner) + feedback de la cita.
+2. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
+3. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
+
+Detalle operativo: ver `handoff.md`.
 
 ## Esquema de datos (capa gratuita + auth)
 

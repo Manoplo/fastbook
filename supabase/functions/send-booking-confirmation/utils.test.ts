@@ -1,29 +1,43 @@
 import { assertEquals } from 'jsr:@std/assert@1'
 import {
   bookingCheckInPath,
-  extractBookingId,
+  extractBookingLookup,
   formatBookingTimeLabel,
   isAuthorized,
 } from './utils.ts'
 
-Deno.test('extractBookingId from webhook INSERT', () => {
+Deno.test('extractBookingLookup from webhook INSERT', () => {
   assertEquals(
-    extractBookingId({
+    extractBookingLookup({
       type: 'INSERT',
       table: 'bookings',
       record: { id: 'booking-1' },
     }),
-    'booking-1',
+    { kind: 'id', bookingId: 'booking-1' },
   )
 })
 
-Deno.test('extractBookingId from manual invoke', () => {
-  assertEquals(extractBookingId({ bookingId: 'booking-2' }), 'booking-2')
+Deno.test('extractBookingLookup from checkInToken (cliente)', () => {
+  assertEquals(
+    extractBookingLookup({ checkInToken: 'abc123' }),
+    { kind: 'token', checkInToken: 'abc123' },
+  )
 })
 
-Deno.test('extractBookingId rejects unrelated payload', () => {
+Deno.test('extractBookingLookup from manual bookingId', () => {
+  assertEquals(extractBookingLookup({ bookingId: 'booking-2' }), {
+    kind: 'id',
+    bookingId: 'booking-2',
+  })
+})
+
+Deno.test('extractBookingLookup rejects unrelated payload', () => {
   assertEquals(
-    extractBookingId({ type: 'UPDATE', table: 'bookings', record: { id: 'x' } }),
+    extractBookingLookup({
+      type: 'UPDATE',
+      table: 'bookings',
+      record: { id: 'x' },
+    }),
     null,
   )
 })
@@ -39,14 +53,17 @@ Deno.test('formatBookingTimeLabel trims seconds', () => {
   assertEquals(formatBookingTimeLabel('09:30:00'), '09:30')
 })
 
-Deno.test('isAuthorized accepts bearer or custom header', () => {
+Deno.test('isAuthorized accepts bearer, header, or client checkInToken', () => {
   const secret = 'test-secret'
+  const longToken = 'a'.repeat(32)
+
   assertEquals(
     isAuthorized(
       new Request('http://localhost', {
         headers: { Authorization: `Bearer ${secret}` },
       }),
       secret,
+      {},
     ),
     true,
   )
@@ -56,20 +73,21 @@ Deno.test('isAuthorized accepts bearer or custom header', () => {
         headers: { 'x-booking-webhook-secret': secret },
       }),
       secret,
+      {},
     ),
     true,
   )
   assertEquals(
-    isAuthorized(new Request('http://localhost'), secret),
-    false,
+    isAuthorized(new Request('http://localhost'), secret, {
+      checkInToken: longToken,
+    }),
+    true,
   )
   assertEquals(
-    isAuthorized(
-      new Request('http://localhost', {
-        headers: { Authorization: `Bearer ${secret}` },
-      }),
-      undefined,
-    ),
+    isAuthorized(new Request('http://localhost'), secret, {
+      checkInToken: 'short',
+    }),
     false,
   )
+  assertEquals(isAuthorized(new Request('http://localhost'), secret, {}), false)
 })

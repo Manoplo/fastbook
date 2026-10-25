@@ -2,13 +2,24 @@ export type BookingWebhookPayload = {
   type?: string
   table?: string
   schema?: string
-  record?: { id?: string } | null
+  record?: { id?: string; check_in_token?: string } | null
   bookingId?: string
+  checkInToken?: string
 }
 
-export function extractBookingId(body: BookingWebhookPayload): string | null {
+export type BookingLookup =
+  | { kind: 'id'; bookingId: string }
+  | { kind: 'token'; checkInToken: string }
+
+export function extractBookingLookup(
+  body: BookingWebhookPayload,
+): BookingLookup | null {
+  if (typeof body.checkInToken === 'string' && body.checkInToken.length > 0) {
+    return { kind: 'token', checkInToken: body.checkInToken }
+  }
+
   if (typeof body.bookingId === 'string' && body.bookingId.length > 0) {
-    return body.bookingId
+    return { kind: 'id', bookingId: body.bookingId }
   }
 
   const recordId = body.record?.id
@@ -18,28 +29,42 @@ export function extractBookingId(body: BookingWebhookPayload): string | null {
     typeof recordId === 'string' &&
     recordId.length > 0
   ) {
-    return recordId
+    return { kind: 'id', bookingId: recordId }
   }
 
   return null
 }
 
+/** @deprecated usar extractBookingLookup */
+export function extractBookingId(body: BookingWebhookPayload): string | null {
+  const lookup = extractBookingLookup(body)
+  return lookup?.kind === 'id' ? lookup.bookingId : null
+}
+
+/**
+ * Autoriza:
+ * - Webhook / curl con `BOOKING_CONFIRMATION_WEBHOOK_SECRET`
+ * - Cliente público con `checkInToken` (se valida contra BBDD después)
+ */
 export function isAuthorized(
   req: Request,
   webhookSecret: string | undefined,
+  body: BookingWebhookPayload,
 ): boolean {
-  if (!webhookSecret) {
-    // Sin secret configurado no aceptamos tráfico (evita función abierta a internet).
-    return false
+  if (webhookSecret) {
+    const bearer = req.headers.get('Authorization')
+    if (bearer === `Bearer ${webhookSecret}`) {
+      return true
+    }
+    const headerSecret = req.headers.get('x-booking-webhook-secret')
+    if (headerSecret === webhookSecret) {
+      return true
+    }
   }
 
-  const bearer = req.headers.get('Authorization')
-  if (bearer === `Bearer ${webhookSecret}`) {
-    return true
-  }
-
-  const headerSecret = req.headers.get('x-booking-webhook-secret')
-  return headerSecret === webhookSecret
+  return (
+    typeof body.checkInToken === 'string' && body.checkInToken.length >= 32
+  )
 }
 
 /** Misma forma de path que `src/lib/booking-check-in.utils.ts`. */
