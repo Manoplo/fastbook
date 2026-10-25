@@ -1,68 +1,70 @@
-# Handoff — Fastbook (sesión hasta 2026-10-12)
+# Handoff — Fastbook (cierre PR confirmación + QR)
 
-Documento para el siguiente agente tras limpiar contexto. Leer también `.cursor/rules/fastbook.mdc` y `fastbook-roadmap.md`.
+Documento para el siguiente agente. Leer también `.cursor/rules/fastbook.mdc` y `fastbook-roadmap.md`. Storming de referencia: `booking-confirmation-storming.md`.
 
-## Estado actual
+## Estado al cerrar esta PR
 
-- **Rama:** `feat/dashboard-bookings`
-- **App:** React 19 + Vite 8 + TypeScript + **React Compiler** activo
-- **MCPs listos:** Supabase (`user-supabase`) y Stitch (`user-stitch`)
-- **CI:** `pnpm verify` (lint + tests) en cada push
-- **BBDD:** free tier + `tenant_auth` + `tenant_availability_and_pro` (`is_pro`, horario a nivel tenant)
-- **Reserva pública:** operativa; slots desde `tenant_availability`
-- **Auth empresa:** login/signup + dashboard autenticado operativos
-- **Horarios y Servicios:** UI + CRUD operativos en `/enterprise/:tenantSlug/schedules`
-- **Agenda y Citas:** UI Stitch + **bookings reales** del tenant (timeline, contadores, filtros, búsqueda)
+- **Rama:** `feat/qrcode-generator`
+- **Prod FE:** [https://fastbook.es](https://fastbook.es) (Vercel; `vercel.json` rewrite SPA)
+- **Preview:** `*.vercel.app` (p. ej. `fastbook-sepia.vercel.app`) — misma BBDD/Edge Function que prod
+- **App:** React 19 + Vite 8 + TypeScript + React Compiler
+- **BBDD:** + `bookings.check_in_token` (migración `20261024000000_booking_check_in_token`)
+- **Email:** Edge Function `send-booking-confirmation` (Resend) desplegada; FE la invoca tras crear reserva
 
-## Qué hay hecho (resumen)
+## Qué cierra esta PR
 
-1. Bootstrap + CI + tokens + logo.
-2. Flujo público de reserva completo.
-3. Auth enterprise (Supabase email/password, `owner_id`, RLS owner, check-email).
-4. Dashboard shell (header + floating nav + rutas anidadas).
-5. **Agenda:** cards Stitch + datos reales (`listTenantBookingsInRange` + join `services`).
-6. **Horarios y Servicios:** editor semanal + catálogo + modal PRO (límite 2 servicios / sin imagen).
+1. Token opaco `check_in_token` en `bookings` (unique, not null, default).
+2. `createBooking` genera token en cliente, lo inserta y lo devuelve (no hay SELECT público → no `insert().select()`).
+3. QR en step 3 (`qrcode.react`) con URL  
+   `{origin}/enterprise/{tenantSlug}/check-in/{checkInToken}`.
+4. Edge Function Resend: HTML + QR CID + enlace; idempotency `booking-confirmation/{id}`.
+5. Tras INSERT OK → `supabase.functions.invoke('send-booking-confirmation', { body: { checkInToken } })` (fire-and-forget).
+6. Secrets Supabase (no van en Vercel FE): `RESEND_API_KEY`, `APP_ORIGIN=https://fastbook.es`, `BOOKING_EMAIL_FROM` (p. ej. `Fastbook <noreply@mail.fastbook.es>`), opcional `BOOKING_CONFIRMATION_WEBHOOK_SECRET`.
+7. `vercel.json` rewrite para F5 en rutas SPA.
 
-## Stitch
-
-- Proyecto: **Mobile QR Booking System** (`projects/4608395597619626930`)
-- Agenda: **Agenda y Citas** — `screens/4bbda819ea6e4f0e84a9052102a10fe3`
-- Horarios y Servicios: `screens/344caed640c9428b92f49a76ea41d055` (upsell free → modal única, no chips/cards)
-- Login empresas: `screens/d66b74e188954958885d664b3626d472`
-- Tokens: primary `#1c2ac8` / logo `#3B49DF`, Plus Jakarta Sans, surface `#f8f9ff`
-
-## Arquitectura FE relevante
+## Archivos clave
 
 ```
-src/
-  pages/enterprise-dashboard/   → layout autenticado + Outlet (badge según is_pro)
-  pages/enterprise-agenda/      → monta widget
-  pages/enterprise-schedules/   → monta widget
-  widgets/enterprise-agenda/    → timeline + filtros + cards
-    agenda-booking-card/        → card Stitch por cita
-  widgets/enterprise-schedules/ → horario + catálogo + upgrade-pro-modal
-  lib/tenant-bookings.ts        → listado bookings con servicio
-  lib/tenant-availability.ts
-  lib/tenant-services.ts
+src/lib/booking-check-in.utils.ts          → token + URL helpers (+ tests)
+src/lib/create-booking.ts                  → insert + invoke email
+src/components/booking-confirmation/       → QR en confirmación
+supabase/migrations/20261024000000_booking_check_in_token.sql
+supabase/functions/send-booking-confirmation/  → index / email / utils / README
+vercel.json
 ```
 
-## Rutas enterprise
+## Pendiente de verificación manual (prod)
 
-| Ruta | Estado |
-|---|---|
-| `/enterprise/login` | Hecho |
-| `/enterprise/check-email` | Hecho |
-| `/enterprise/:tenantSlug` → redirect `/agenda` | Hecho |
-| `/enterprise/:tenantSlug/agenda` | **Hecho** (bookings reales) |
-| `/enterprise/:tenantSlug/schedules` | **Hecho** |
-| `/enterprise/:tenantSlug/metrics` | Placeholder |
-| `/enterprise/:tenantSlug/settings` | Placeholder |
+- DNS Resend (`mail.fastbook.es`) + envío real tras deploy a prod.
+- Si falla: logs Edge Function + Resend dashboard. El QR en pantalla no depende del email.
 
-## Datos de prueba útiles
+## Preview vs prod (email)
 
-- Tenant **manoplo** (`Manoplo Goolplo`): citas reales el **2026-10-16** (13:00 y 17:00). En Agenda, navegar a ese día.
-- Status BBDD: solo `confirmed` \| `cancelled`. En UI se derivan `in_progress` / `completed` según la hora actual.
-- Free: `is_pro = false` (Manoplo incluido). Límite 2 servicios + sin imagen → modal.
+| | Preview | Prod |
+|---|---|---|
+| ¿Manda email? | Sí (mismos secrets) | Sí |
+| Enlace/QR del **mail** | `https://fastbook.es/...` (`APP_ORIGIN`) | igual |
+| QR en **pantalla** | origin del preview | `fastbook.es` |
+
+Reservas de preview escriben en la misma BBDD y generan mails reales.
+
+## Siguiente trabajo (prioridad #1)
+
+**Validar QR en el dashboard del tenant → marcar llegada / check-in.**
+
+Alcance sugerido:
+
+1. **Modelo de estados en BBDD** (hoy solo `confirmed` \| `cancelled`; UI deriva `in_progress` / `completed` por hora). Decidir p. ej.:
+   - `checked_in_at` timestamptz, y/o
+   - ampliar `status` (`checked_in` / `completed` / `no_show` / `cancelled`) — necesario también para métricas después.
+2. **UI “Validar QR”** en agenda (botón Stitch aplazado):
+   - Cámara web (`getUserMedia` + `BarcodeDetector` / fallback WASM; Safari iOS frágil).
+   - Fallback: pegar/teclear token o URL.
+3. **Ruta** `/enterprise/:tenantSlug/check-in/:token` (la URL ya está en el QR): owner autenticado → resuelve booking del tenant → check-in → feedback (nombre, servicio, hora).
+4. RPC / update con RLS owner (no confiar solo en el token en cliente).
+5. Tests de utils de parseo URL / transición de estado (sin tocar `supabase-client` en unit tests).
+
+Fuera de este siguiente slice (salvo que se pida): recordatorios D-1, `.ics`, SMS, reorder galería, `/pricing`.
 
 ## Comandos
 
@@ -72,23 +74,18 @@ pnpm verify
 pnpm exec tsc -b
 ```
 
-## Siguiente trabajo (prioridad)
-
-1. Acciones sobre citas (cancelar / marcar completada persistente) si se quiere ir más allá del estado derivado.
-2. Decidir si “Validar QR” entra en MVP web (cámara vs. input de código).
-3. Verificar Redirect URLs de Supabase incluyen `/enterprise/login` (dev + prod).
-4. Más adelante: `/pricing`, Storage de imágenes, enforcement server-side de límites free.
-
 ## Notas para el agente
 
 - Responder en **español**.
-- Horario es **tenant-level** (`tenant_availability`), duración por servicio.
+- No regenerar pantallas/BE sin pedirlo; Stitch + Supabase MCP cuando toque UI/SQL.
 - Tras feature: `pnpm verify` + `tsc -b` + actualizar `fastbook-roadmap.md`.
 - Commits / deps nuevas solo si se piden.
-- Fuera de alcance deliberado en Agenda: cabinas, ocupación de espacios, Validar QR, “Nueva Cita” manual.
+- Código Edge Function vive en `supabase/functions/` (fuera de `src`; no entra en Vitest/tsc del SPA).
 
 ## Archivos de verdad
 
 - Reglas: `.cursor/rules/fastbook.mdc`
 - Plan: `fastbook-roadmap.md`
+- Storming email/QR: `booking-confirmation-storming.md`
+- Function README: `supabase/functions/send-booking-confirmation/README.md`
 - Este handoff: `handoff.md`

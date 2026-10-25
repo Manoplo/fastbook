@@ -1,3 +1,4 @@
+import { createCheckInToken } from './booking-check-in.utils'
 import { supabase } from './supabase-client'
 import {
   BookingConflictError,
@@ -17,6 +18,10 @@ export type CreateBookingInput = {
   notes?: string | null
 }
 
+export type CreateBookingResult = {
+  checkInToken: string
+}
+
 export {
   BookingConflictError,
   addMinutesToTime,
@@ -24,7 +29,12 @@ export {
   toPostgresTime,
 } from './create-booking.utils'
 
-export async function createBooking(input: CreateBookingInput): Promise<void> {
+export async function createBooking(
+  input: CreateBookingInput,
+): Promise<CreateBookingResult> {
+  // Token en cliente: no hay SELECT público en bookings, así que insert().select() fallaría.
+  const checkInToken = createCheckInToken()
+
   const { error } = await supabase.from('bookings').insert({
     tenant_id: input.tenantId,
     service_id: input.serviceId,
@@ -36,15 +46,26 @@ export async function createBooking(input: CreateBookingInput): Promise<void> {
     customer_phone: input.customerPhone?.trim() || null,
     notes: input.notes?.trim() || null,
     status: 'confirmed',
+    check_in_token: checkInToken,
   })
 
-  if (!error) {
-    return
+  if (error) {
+    if (error.code === '23505') {
+      throw new BookingConflictError()
+    }
+    throw error
   }
 
-  if (error.code === '23505') {
-    throw new BookingConflictError()
-  }
+  // No bloquea la UX si Resend falla; el QR en pantalla ya está.
+  void supabase.functions
+    .invoke('send-booking-confirmation', {
+      body: { checkInToken },
+    })
+    .then(({ error: invokeError }) => {
+      if (invokeError) {
+        console.error('send-booking-confirmation invoke failed', invokeError)
+      }
+    })
 
-  throw error
+  return { checkInToken }
 }

@@ -135,16 +135,28 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 
 - Chip verde “Abierto para reservas”
 - Métrica “Cabinas activas” / panel “Ocupación de espacios” (no aplica al modelo actual)
-- Botón “Validar QR” (posible en web vía cámara/`BarcodeDetector` o código manual; aplazado hasta decidir flujo)
 - “Nueva Cita” manual / huecos vacíos clicables
-- Persistencia de estados `in_progress` / `completed` (hoy se derivan de la hora; BBDD solo `confirmed` \| `cancelled`)
 - Chips/cards de upsell free repetidos (Stitch); se unificó en modal
 - Stripe / página `/pricing`
 
-### Siguiente
+### Confirmación + QR + email ✅ (rama `feat/qrcode-generator`)
 
-1. Reorder DnD de miniaturas / elegir portada explícita en dashboard (hoy: orden = lista, primera = portada).
-2. Acciones sobre citas (cancelar / completar en BBDD) si se quiere ir más allá del estado derivado por hora.
+- [x] Migración `booking_check_in_token`: `bookings.check_in_token` (text unique not null + default)
+- [x] `createBooking` genera token en cliente, lo inserta y lo devuelve (sin `select` público en bookings)
+- [x] QR en step 3 (`qrcode.react`) con URL `{origin}/enterprise/{slug}/check-in/{token}`
+- [x] Edge Function `send-booking-confirmation` (Resend + QR CID). Código: `supabase/functions/send-booking-confirmation/`
+- [x] Secrets prod (`APP_ORIGIN=https://fastbook.es`, Resend + from `mail.fastbook.es`)
+- [x] FE invoca la function tras crear reserva (`checkInToken`; fire-and-forget)
+- [x] `vercel.json` rewrite SPA + dominio `fastbook.es`
+- [ ] Verificación manual en prod (DNS Resend / mails reales) — a cargo del owner al merge
+
+### Siguiente (prioridad)
+
+1. **Validar QR en dashboard del tenant** → check-in de la cita:
+   - Modelo BBDD: `checked_in_at` y/o ampliar `status` (`checked_in` / `completed` / `no_show`) — hoy UI deriva estados por hora; BBDD solo `confirmed` \| `cancelled`.
+   - UI agenda “Validar QR”: cámara + input manual; ruta `/enterprise/:tenantSlug/check-in/:token` (ya codificada en el QR).
+   - Update autenticado (owner) + feedback de la cita.
+2. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
 3. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
 
 Detalle operativo: ver `handoff.md`.
@@ -204,6 +216,7 @@ erDiagram
     text customer_name
     text customer_email
     text customer_phone
+    text check_in_token UK
     text status
     timestamptz created_at
   }
@@ -216,7 +229,7 @@ erDiagram
 | `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `is_pro` (plan). `booking_note` antes de confirmar. |
 | `services` | Catálogo por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. Free: máx. 2 (UI). Pro: `image_urls` (≤10) + `youtube_url`; `image_url` portada/legacy. |
 | `tenant_availability` | Ventanas semanales del negocio (`day_of_week` 0=dom…6=sáb + `start_time`/`end_time`). |
-| `bookings` | Reserva concreta. Unique `(service_id, booking_date, start_time)` evita dobles. Status: `confirmed` \| `cancelled`. |
+| `bookings` | Reserva concreta. Unique `(service_id, booking_date, start_time)` evita dobles. `check_in_token` opaco para QR. Status: `confirmed` \| `cancelled`. |
 
 ### Relaciones y flujo
 
@@ -243,6 +256,7 @@ erDiagram
 | [`20260930000001_tenant_auth_private_helper.sql`](supabase/migrations/20260930000001_tenant_auth_private_helper.sql) | Helper privado follow-up |
 | [`20261012000000_tenant_availability_and_pro.sql`](supabase/migrations/20261012000000_tenant_availability_and_pro.sql) | `is_pro` + `tenant_availability`; drop `service_availability` |
 | [`20261018000000_service_images_gallery_and_storage.sql`](supabase/migrations/20261018000000_service_images_gallery_and_storage.sql) | `image_urls` + `youtube_url`; bucket `service-images` + policies |
+| [`20261024000000_booking_check_in_token.sql`](supabase/migrations/20261024000000_booking_check_in_token.sql) | `bookings.check_in_token` unique not null (QR / check-in) |
 
 **Proyecto Supabase:** `fastbook` (`ptgltexbfxjqmyozcavt`, `eu-west-1`).
 

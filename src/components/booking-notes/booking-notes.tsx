@@ -1,26 +1,19 @@
 import { CheckCircleIcon } from '@components/icons/check-circle-icon'
-import { UpdateIcon } from '@components/icons/update-icon'
-import { VerifiedIcon } from '@components/icons/verified-icon'
+import { QrCodeIcon } from '@components/icons/qr-code-icon'
 import type { BookingNotesProps } from './booking-notes.types'
 import './booking-notes.css'
 
 const TRUST_BADGES = [
   {
     id: 'sms',
-    label: 'Confirmación SMS instantánea',
+    label: 'Confirmación vía email instantánea',
     icon: CheckCircleIcon,
     tone: 'tertiary' as const,
   },
   {
-    id: 'cancel',
-    label: 'Cancelación libre 24h antes',
-    icon: UpdateIcon,
-    tone: 'primary' as const,
-  },
-  {
-    id: 'pay',
-    label: 'Pago seguro garantizado',
-    icon: VerifiedIcon,
+    id: 'qr',
+    label: 'Acceso QR garantizado',
+    icon: QrCodeIcon,
     tone: 'primary' as const,
   },
 ]
