@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { CookieBanner } from "@components/cookie-banner/cookie-banner";
 import { RequireAuth } from "@components/require-auth/require-auth";
 import { AuthSessionProvider } from "@src/providers/auth-session-provider";
 import { BookingPage } from "@src/pages/booking/booking";
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/:tenantSlug" element={<BookingPage />} />
         </Routes>
       </AuthSessionProvider>
+      <CookieBanner />
     </BrowserRouter>
   );
 }

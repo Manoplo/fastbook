@@ -1,7 +1,9 @@
-@import '@fontsource-variable/plus-jakarta-sans';
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/jetbrains-mono';
 
 :root {
-  --fb-font: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --fb-font: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+  --fb-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
 
   --fb-primary: #1c2ac8;
   --fb-primary-container: #3b49df;

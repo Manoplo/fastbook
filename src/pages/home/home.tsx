@@ -1,27 +1,24 @@
-import { Link } from 'react-router-dom'
-import { FastbookLogo } from '@components/fastbook-logo/fastbook-logo'
+import { LandingComparison } from './landing-comparison/landing-comparison'
+import { LandingFinalCta } from './landing-final-cta/landing-final-cta'
+import { LandingFooter } from './landing-footer/landing-footer'
+import { LandingHeader } from './landing-header/landing-header'
+import { LandingHero } from './landing-hero/landing-hero'
+import { LandingPricing } from './landing-pricing/landing-pricing'
+import { LandingSteps } from './landing-steps/landing-steps'
 import './home.css'
 
 export function HomePage() {
   return (
     <div className="home">
-      <FastbookLogo />
-      <h1 className="home__title">Da de alta tu negocio</h1>
-      <p className="home__text">
-        Crea tu cuenta de empresa o inicia sesión para acceder al panel. Tus
-        clientes reservarán en tu página pública.
-      </p>
-      <div className="home__actions">
-        <Link className="home__cta" to="/enterprise/login">
-          Acceder / darse de alta
-        </Link>
-        <p className="home__hint">
-          Ejemplo de reservas:{' '}
-          <Link className="home__link" to="/demo-salon">
-            /demo-salon
-          </Link>
-        </p>
-      </div>
+      <LandingHeader />
+      <main>
+        <LandingHero />
+        <LandingSteps />
+        <LandingComparison />
+        <LandingPricing />
+        <LandingFinalCta />
+      </main>
+      <LandingFooter />
     </div>
   )
 }
