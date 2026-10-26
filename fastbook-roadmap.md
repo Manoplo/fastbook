@@ -83,7 +83,7 @@ SQL en repo:
 
 | Ruta | Página | Estado |
 |---|---|---|
-| `/` | Home (CTA a enterprise) | Hecho |
+| `/` | Landing (hero, pasos, tabla ventajas, pricing Gratis/Pro 18€, CTA a login) — réplica de la opción A del diseño | Hecho (v1, a iterar) |
 | `/:tenantSlug` | Reserva pública | Hecho |
 | `/enterprise/login` | Login + signup (toggle) UI Stitch | Hecho |
 | `/enterprise/check-email` | Post-signup: “confirma tu email” | Hecho |
@@ -264,6 +264,7 @@ erDiagram
 
 - FE: Stitch → implementación React.
 - BE: Supabase (tablas, RLS, Auth, clientes).
+- Tipografías: Space Grotesk (UI) + JetBrains Mono (slugs, precios, horas) vía Fontsource; tokens `--fb-font` / `--fb-font-mono` en `src/index.css`.
 - Stack FE: `@tanstack/react-query`, `react-router-dom`, `zustand`, `react-hook-form` (enterprise login), `classnames`.
 - Tests: `pnpm test` (watch) / `pnpm test:run` (CI). Archivos `*.test.ts(x)` / `*.spec.ts(x)` en `src/`.
 - Tras cada feature larga: actualizar **este archivo** (hecho / pendiente / siguiente) para el siguiente agente.
