@@ -1,9 +1,13 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import QRCode from 'npm:qrcode@1.5.4'
-import { buildBookingConfirmationEmail } from './email.ts'
+import {
+  buildBookingConfirmationEmail,
+  buildTenantBookingNotificationEmail,
+} from './email.ts'
 import {
   bookingCheckInPath,
+  enterpriseAgendaPath,
   extractBookingLookup,
   formatBookingDateLabel,
   formatBookingTimeLabel,
@@ -20,9 +24,10 @@ const BOOKING_SELECT = `
   end_time,
   customer_name,
   customer_email,
+  customer_phone,
   check_in_token,
   status,
-  tenant:tenants!bookings_tenant_id_fkey ( id, slug, name ),
+  tenant:tenants!bookings_tenant_id_fkey ( id, slug, name, owner_id ),
   service:services!bookings_service_id_fkey ( id, name, duration_minutes )
 `
 
@@ -116,10 +121,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ error: 'Booking missing customer_email' }, 500)
   }
 
+  const dateLabel = formatBookingDateLabel(booking.booking_date)
+  const timeLabel = formatBookingTimeLabel(booking.start_time)
+  const serviceName = service?.name ?? 'Servicio'
   const checkInUrl = `${appOrigin}${bookingCheckInPath(
     tenant.slug,
     booking.check_in_token,
   )}`
+  const agendaUrl = `${appOrigin}${enterpriseAgendaPath(tenant.slug)}`
 
   let qrPngBase64: string
   try {
@@ -138,58 +147,184 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ error: 'Failed to generate QR' }, 500)
   }
 
-  const email = buildBookingConfirmationEmail({
+  const customerEmail = buildBookingConfirmationEmail({
     tenantName: tenant.name,
     customerName: booking.customer_name,
-    serviceName: service?.name ?? 'Servicio',
-    dateLabel: formatBookingDateLabel(booking.booking_date),
-    timeLabel: formatBookingTimeLabel(booking.start_time),
+    serviceName,
+    dateLabel,
+    timeLabel,
     checkInUrl,
   })
 
-  const resendResponse = await fetch(RESEND_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      'Content-Type': 'application/json',
-      'Idempotency-Key': `booking-confirmation/${booking.id}`,
-    },
-    body: JSON.stringify({
-      from: fromEmail,
-      to: [booking.customer_email],
-      subject: email.subject,
-      html: email.html,
-      text: email.text,
-      attachments: [
-        {
-          filename: 'reserva-qr.png',
-          content: qrPngBase64,
-          content_id: 'booking-qr',
-        },
-      ],
-    }),
+  const customerSend = await sendResendEmail({
+    apiKey: resendApiKey,
+    from: fromEmail,
+    to: booking.customer_email,
+    subject: customerEmail.subject,
+    html: customerEmail.html,
+    text: customerEmail.text,
+    idempotencyKey: `booking-confirmation/${booking.id}`,
+    attachments: [
+      {
+        filename: 'reserva-qr.png',
+        content: qrPngBase64,
+        content_id: 'booking-qr',
+      },
+    ],
   })
 
-  const resendBody = await resendResponse.json().catch(() => null)
-
-  if (!resendResponse.ok) {
-    console.error('resend failed', resendResponse.status, resendBody)
+  if (!customerSend.ok) {
+    console.error('resend customer failed', customerSend.status, customerSend.body)
     return jsonResponse(
       {
-        error: 'Resend rejected the email',
-        status: resendResponse.status,
-        details: resendBody,
+        error: 'Resend rejected the customer email',
+        status: customerSend.status,
+        details: customerSend.body,
       },
       502,
     )
   }
 
+  const tenantNotify = await sendTenantNotification({
+    supabase,
+    resendApiKey,
+    fromEmail,
+    bookingId: booking.id,
+    ownerId: typeof tenant.owner_id === 'string' ? tenant.owner_id : null,
+    tenantName: tenant.name,
+    customerName: booking.customer_name,
+    customerEmail: booking.customer_email,
+    customerPhone:
+      typeof booking.customer_phone === 'string' ? booking.customer_phone : null,
+    serviceName,
+    dateLabel,
+    timeLabel,
+    agendaUrl,
+  })
+
   return jsonResponse({
     ok: true,
     bookingId: booking.id,
-    emailId: resendBody?.id ?? null,
+    emailId: customerSend.body?.id ?? null,
+    tenantNotification: tenantNotify,
   })
 })
+
+type ResendAttachment = {
+  filename: string
+  content: string
+  content_id: string
+}
+
+type ResendSendResult =
+  | { ok: true; status: number; body: { id?: string } | null }
+  | { ok: false; status: number; body: unknown }
+
+async function sendResendEmail(input: {
+  apiKey: string
+  from: string
+  to: string
+  subject: string
+  html: string
+  text: string
+  idempotencyKey: string
+  attachments?: ResendAttachment[]
+}): Promise<ResendSendResult> {
+  const payload: Record<string, unknown> = {
+    from: input.from,
+    to: [input.to],
+    subject: input.subject,
+    html: input.html,
+    text: input.text,
+  }
+  if (input.attachments?.length) {
+    payload.attachments = input.attachments
+  }
+
+  const resendResponse = await fetch(RESEND_API_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${input.apiKey}`,
+      'Content-Type': 'application/json',
+      'Idempotency-Key': input.idempotencyKey,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const body = await resendResponse.json().catch(() => null)
+
+  if (!resendResponse.ok) {
+    return { ok: false, status: resendResponse.status, body }
+  }
+
+  return { ok: true, status: resendResponse.status, body }
+}
+
+type TenantNotifyResult =
+  | { status: 'sent'; emailId: string | null }
+  | { status: 'skipped'; reason: string }
+  | { status: 'failed'; reason: string }
+
+async function sendTenantNotification(input: {
+  supabase: ReturnType<typeof createClient>
+  resendApiKey: string
+  fromEmail: string
+  bookingId: string
+  ownerId: string | null
+  tenantName: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string | null
+  serviceName: string
+  dateLabel: string
+  timeLabel: string
+  agendaUrl: string
+}): Promise<TenantNotifyResult> {
+  if (!input.ownerId) {
+    return { status: 'skipped', reason: 'tenant_without_owner' }
+  }
+
+  const { data: ownerData, error: ownerError } =
+    await input.supabase.auth.admin.getUserById(input.ownerId)
+
+  if (ownerError) {
+    console.error('owner lookup failed', ownerError)
+    return { status: 'failed', reason: 'owner_lookup_failed' }
+  }
+
+  const ownerEmail = ownerData.user?.email?.trim()
+  if (!ownerEmail) {
+    return { status: 'skipped', reason: 'owner_without_email' }
+  }
+
+  const email = buildTenantBookingNotificationEmail({
+    tenantName: input.tenantName,
+    customerName: input.customerName,
+    customerEmail: input.customerEmail,
+    customerPhone: input.customerPhone,
+    serviceName: input.serviceName,
+    dateLabel: input.dateLabel,
+    timeLabel: input.timeLabel,
+    agendaUrl: input.agendaUrl,
+  })
+
+  const send = await sendResendEmail({
+    apiKey: input.resendApiKey,
+    from: input.fromEmail,
+    to: ownerEmail,
+    subject: email.subject,
+    html: email.html,
+    text: email.text,
+    idempotencyKey: `tenant-booking-notification/${input.bookingId}`,
+  })
+
+  if (!send.ok) {
+    console.error('resend tenant failed', send.status, send.body)
+    return { status: 'failed', reason: 'resend_rejected' }
+  }
+
+  return { status: 'sent', emailId: send.body?.id ?? null }
+}
 
 function unwrapRelation<T>(value: T | T[] | null | undefined): T | null {
   if (!value) {

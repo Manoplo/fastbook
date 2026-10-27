@@ -152,6 +152,7 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] Secrets prod (Resend + from `mail.fastbook.es`); **actualizar** `APP_ORIGIN=https://app.fastbook.es` tras cutover
 - [x] FE invoca la function tras crear reserva (`checkInToken`; fire-and-forget)
 - [x] `vercel.json` rewrite SPA + `X-Robots-Tag: noindex` (dominio `app.fastbook.es`)
+- [x] **Aviso al tenant (free + Pro):** mismo invoke; 2.º email Resend al `auth.users.email` del `tenants.owner_id` (sin migración; skip si no hay owner). Idempotency `tenant-booking-notification/{bookingId}`. CTA → agenda.
 - [ ] Verificación manual en prod (DNS Resend / mails reales) — a cargo del owner al merge
 
 ### Split dominios marketing / app ✅ (código)
@@ -176,13 +177,14 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 
 ### Siguiente (prioridad)
 
-1. **Cutover DNS + Auth** (ver `docs/domain-split.md`): apuntar dominios, actualizar Supabase Auth y `APP_ORIGIN`.
-2. **Validar QR en dashboard del tenant** → check-in de la cita:
+1. **Probar aviso al tenant en prod:** crear una reserva en un tenant con `owner_id` y confirmar que llegan 2 mails (cliente + owner). Revisar `tenantNotification` en logs de la Edge Function si falla.
+2. **Cutover DNS + Auth** (ver `docs/domain-split.md`): apuntar dominios, actualizar Supabase Auth y `APP_ORIGIN`.
+3. **Validar QR en dashboard del tenant** → check-in de la cita:
    - Modelo BBDD: `checked_in_at` y/o ampliar `status` (`checked_in` / `completed` / `no_show`) — hoy UI deriva estados por hora; BBDD solo `confirmed` \| `cancelled`.
    - UI agenda “Validar QR”: cámara + input manual; ruta `/enterprise/:tenantSlug/check-in/:token` (ya codificada en el QR).
    - Update autenticado (owner) + feedback de la cita.
-3. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
-4. (Más adelante) Página `/pricing` + enforcement server-side de límites free; URLs “bonitas” `fastbook.es/:slug` vía rewrite o subdominio por tenant.
+4. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
+5. (Más adelante) Página `/pricing` + enforcement server-side de límites free; email de notificación configurable distinto del login; URLs “bonitas” `fastbook.es/:slug`.
 
 Detalle operativo: ver `handoff.md` y `docs/domain-split.md`.
 
