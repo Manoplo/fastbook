@@ -75,6 +75,11 @@ export function bookingCheckInPath(
   return `/enterprise/${encodeURIComponent(tenantSlug)}/check-in/${encodeURIComponent(checkInToken)}`
 }
 
+/** Misma forma que `enterpriseDashboardPath(slug, 'agenda')` en el FE. */
+export function enterpriseAgendaPath(tenantSlug: string): string {
+  return `/enterprise/${encodeURIComponent(tenantSlug)}/agenda`
+}
+
 export function formatBookingDateLabel(dateKey: string): string {
   const [year, month, day] = dateKey.split('-').map(Number)
   if (!year || !month || !day) {

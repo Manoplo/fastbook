@@ -152,6 +152,8 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] Secrets prod (Resend + from `mail.fastbook.es`); **actualizar** `APP_ORIGIN=https://app.fastbook.es` tras cutover
 - [x] FE invoca la function tras crear reserva (`checkInToken`; fire-and-forget)
 - [x] `vercel.json` rewrite SPA + `X-Robots-Tag: noindex` (dominio `app.fastbook.es`)
+- [x] **Aviso al tenant (free + Pro):** mismo invoke; 2.º email Resend al `auth.users.email` del `tenants.owner_id` (sin migración; skip si no hay owner). Idempotency `tenant-booking-notification/{bookingId}`. CTA → agenda.
+- [x] **Recordatorio D-1 al customer (solo Pro):** columna `bookings.reminder_sent_at`; Edge Function `send-booking-reminders`; `pg_cron` cada 15 min + Vault; ventana 23–24 h antes (`Europe/Madrid`); claim atómico + release si Resend falla. Migraciones `booking_reminder_pro` / `booking_reminder_cron`.
 - [ ] Verificación manual en prod (DNS Resend / mails reales) — a cargo del owner al merge
 
 ### Split dominios marketing / app ✅ (código)
@@ -176,13 +178,14 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 
 ### Siguiente (prioridad)
 
-1. **Cutover DNS + Auth** (ver `docs/domain-split.md`): apuntar dominios, actualizar Supabase Auth y `APP_ORIGIN`.
-2. **Validar QR en dashboard del tenant** → check-in de la cita:
+1. **Probar aviso al tenant + recordatorio Pro:** reserva → 2 mails (cliente + owner). Para D-1: cita Pro con inicio en ~23.5 h y forzar cron / curl a `send-booking-reminders` (secret en Vault).
+2. **Cutover DNS + Auth** (ver `docs/domain-split.md`): apuntar dominios, actualizar Supabase Auth y `APP_ORIGIN`.
+3. **Validar QR en dashboard del tenant** → check-in de la cita:
    - Modelo BBDD: `checked_in_at` y/o ampliar `status` (`checked_in` / `completed` / `no_show`) — hoy UI deriva estados por hora; BBDD solo `confirmed` \| `cancelled`.
    - UI agenda “Validar QR”: cámara + input manual; ruta `/enterprise/:tenantSlug/check-in/:token` (ya codificada en el QR).
    - Update autenticado (owner) + feedback de la cita.
-3. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
-4. (Más adelante) Página `/pricing` + enforcement server-side de límites free; URLs “bonitas” `fastbook.es/:slug` vía rewrite o subdominio por tenant.
+4. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
+5. (Más adelante) Página `/pricing` + enforcement server-side de límites free; email de notificación configurable distinto del login; URLs “bonitas” `fastbook.es/:slug`.
 
 Detalle operativo: ver `handoff.md` y `docs/domain-split.md`.
 
@@ -250,6 +253,7 @@ erDiagram
     text customer_phone
     text check_in_token UK
     text status
+    timestamptz reminder_sent_at
     timestamptz created_at
   }
 ```
@@ -261,7 +265,7 @@ erDiagram
 | `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `is_pro` (plan). `booking_note` antes de confirmar. Branding Pro: `logo_url`, `brand_primary`/`brand_secondary`, `brand_surface`/`brand_on_surface` (cajas + tipografía), `brand_font` (catálogo cerrado), `brand_logo_height` (24–64). |
 | `services` | Catálogo por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. Free: máx. 2 (UI). Pro: `image_urls` (≤10) + `youtube_url`; `image_url` portada/legacy. |
 | `tenant_availability` | Ventanas semanales del negocio (`day_of_week` 0=dom…6=sáb + `start_time`/`end_time`). |
-| `bookings` | Reserva concreta. Unique `(service_id, booking_date, start_time)` evita dobles. `check_in_token` opaco para QR. Status: `confirmed` \| `cancelled`. |
+| `bookings` | Reserva concreta. Unique `(service_id, booking_date, start_time)` evita dobles. `check_in_token` opaco para QR. Status: `confirmed` \| `cancelled`. `reminder_sent_at` = recordatorio D-1 enviado (Pro). |
 
 ### Relaciones y flujo
 
@@ -291,6 +295,8 @@ erDiagram
 | [`20261024000000_booking_check_in_token.sql`](supabase/migrations/20261024000000_booking_check_in_token.sql) | `bookings.check_in_token` unique not null (QR / check-in) |
 | [`20261027000000_tenant_branding.sql`](supabase/migrations/20261027000000_tenant_branding.sql) | Branding Pro en `tenants` + bucket `tenant-branding` + RLS Storage |
 | [`20261027120000_tenant_branding_surface_text.sql`](supabase/migrations/20261027120000_tenant_branding_surface_text.sql) | `brand_surface` + `brand_on_surface` (fondos oscuros + tipografía clara) |
+| [`20261027180000_booking_reminder_pro.sql`](supabase/migrations/20261027180000_booking_reminder_pro.sql) | `reminder_sent_at` + RPCs claim/release + auth cron (solo Pro) |
+| [`20261027180100_booking_reminder_cron.sql`](supabase/migrations/20261027180100_booking_reminder_cron.sql) | Vault secrets + `pg_cron` `*/15` → `send-booking-reminders` |
 
 **Proyecto Supabase:** `fastbook` (`ptgltexbfxjqmyozcavt`, `eu-west-1`).
 
