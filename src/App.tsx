@@ -10,7 +10,7 @@ import { EnterpriseLoginPage } from "@src/pages/enterprise-login/enterprise-logi
 import { EnterpriseMetricsPage } from "@src/pages/enterprise-metrics/enterprise-metrics";
 import { EnterpriseSchedulesPage } from "@src/pages/enterprise-schedules/enterprise-schedules";
 import { EnterpriseSettingsPage } from "@src/pages/enterprise-settings/enterprise-settings";
-import { HomePage } from "@src/pages/home/home";
+import { MarketingRedirect } from "@components/marketing-redirect/marketing-redirect";
 import {
   ENTERPRISE_CHECK_EMAIL_PATH,
   ENTERPRISE_LOGIN_PATH,
@@ -21,7 +21,7 @@ export default function App() {
     <BrowserRouter>
       <AuthSessionProvider>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<MarketingRedirect />} />
           <Route path={ENTERPRISE_LOGIN_PATH} element={<EnterpriseLoginPage />} />
           <Route path={ENTERPRISE_CHECK_EMAIL_PATH} element={<EnterpriseCheckEmailPage />} />
           <Route

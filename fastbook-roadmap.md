@@ -83,8 +83,8 @@ SQL en repo:
 
 | Ruta | Página | Estado |
 |---|---|---|
-| `/` | Landing (hero, pasos, tabla ventajas, pricing Gratis/Pro 18€, CTA a login) — réplica de la opción A del diseño | Hecho (v1, a iterar) |
-| `/:tenantSlug` | Reserva pública | Hecho |
+| `/` (SPA) | Redirect → `https://fastbook.es` (marketing Astro) | Hecho |
+| `/:tenantSlug` | Reserva pública en `app.fastbook.es` | Hecho |
 | `/enterprise/login` | Login + signup (toggle) UI Stitch | Hecho |
 | `/enterprise/check-email` | Post-signup: “confirma tu email” | Hecho |
 | `/enterprise/:tenantSlug` | Dashboard layout (header + floating nav) | Hecho |
@@ -102,8 +102,12 @@ SQL en repo:
 - [x] Signup: detectar email ya registrado (`identities: []` ofuscado) + pre-check slug ocupado
 - [x] Migración `tenants_owner_delete_cascade`: borrar user Auth → cascade del tenant (evita huérfanos)
 
-**Config Supabase (manual):** en Authentication → URL Configuration, añadir a Redirect URLs:
-`http://localhost:5173/enterprise/login` (y la URL de prod equivalente). Sin esto, Supabase ignora `emailRedirectTo` y vuelve al Site URL (`/`).
+**Config Supabase (manual):** en Authentication → URL Configuration:
+
+- Site URL: `https://app.fastbook.es`
+- Redirect URLs: `https://app.fastbook.es/**`, `https://app.fastbook.es/enterprise/login`, `http://localhost:5173/**`
+
+Sin esto, Supabase ignora `emailRedirectTo` y vuelve al Site URL.
 
 ### Fuera de alcance de esta fase (siguiente)
 
@@ -145,25 +149,36 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] `createBooking` genera token en cliente, lo inserta y lo devuelve (sin `select` público en bookings)
 - [x] QR en step 3 (`qrcode.react`) con URL `{origin}/enterprise/{slug}/check-in/{token}`
 - [x] Edge Function `send-booking-confirmation` (Resend + QR CID). Código: `supabase/functions/send-booking-confirmation/`
-- [x] Secrets prod (`APP_ORIGIN=https://fastbook.es`, Resend + from `mail.fastbook.es`)
+- [x] Secrets prod (Resend + from `mail.fastbook.es`); **actualizar** `APP_ORIGIN=https://app.fastbook.es` tras cutover
 - [x] FE invoca la function tras crear reserva (`checkInToken`; fire-and-forget)
-- [x] `vercel.json` rewrite SPA + dominio `fastbook.es`
+- [x] `vercel.json` rewrite SPA + `X-Robots-Tag: noindex` (dominio `app.fastbook.es`)
 - [ ] Verificación manual en prod (DNS Resend / mails reales) — a cargo del owner al merge
+
+### Split dominios marketing / app ✅ (código)
+
+- [x] Landing portada a Astro en repo hermano `fastbook-landing` (SSG, SEO, CTAs → `app.fastbook.es`)
+- [x] SPA: `/` → redirect a `https://fastbook.es`; eliminado `src/pages/home/`
+- [x] Copy de URL pública → `app.fastbook.es/tu-negocio`
+- [x] `robots.txt` / meta noindex / header en app; sitemap + robots Allow en landing
+- [x] Redirects apex→app en `fastbook-landing/vercel.json` (`/enterprise/*`, `/:slug`)
+- [x] Guía operativa: [`docs/domain-split.md`](docs/domain-split.md)
+- [ ] **Cutover manual (owner):** DNS Vercel (`fastbook.es` → Astro, `app.fastbook.es` → SPA), Auth Site URL + Redirect URLs, secret `APP_ORIGIN`
 
 ### Siguiente (prioridad)
 
-1. **Validar QR en dashboard del tenant** → check-in de la cita:
+1. **Cutover DNS + Auth** (ver `docs/domain-split.md`): apuntar dominios, actualizar Supabase Auth y `APP_ORIGIN`.
+2. **Validar QR en dashboard del tenant** → check-in de la cita:
    - Modelo BBDD: `checked_in_at` y/o ampliar `status` (`checked_in` / `completed` / `no_show`) — hoy UI deriva estados por hora; BBDD solo `confirmed` \| `cancelled`.
    - UI agenda “Validar QR”: cámara + input manual; ruta `/enterprise/:tenantSlug/check-in/:token` (ya codificada en el QR).
    - Update autenticado (owner) + feedback de la cita.
-2. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
-3. (Más adelante) Página `/pricing` + enforcement server-side de límites free.
+3. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
+4. (Más adelante) Página `/pricing` + enforcement server-side de límites free; URLs “bonitas” `fastbook.es/:slug` vía rewrite o subdominio por tenant.
 
-Detalle operativo: ver `handoff.md`.
+Detalle operativo: ver `handoff.md` y `docs/domain-split.md`.
 
 ## Esquema de datos (capa gratuita + auth)
 
-Modelo pensado para `booked.es/{slug}`: el **tenant** es la empresa; el público lee servicios y disponibilidad; las reservas se escriben con policy controlada; el **owner** gestiona su tenant autenticado.
+Modelo pensado para `app.fastbook.es/{slug}`: el **tenant** es la empresa; el público lee servicios y disponibilidad; las reservas se escriben con policy controlada; el **owner** gestiona su tenant autenticado. Marketing SEO en `fastbook.es` (Astro).
 
 ```mermaid
 erDiagram

@@ -24,7 +24,7 @@ También acepta webhook INSERT / `{ bookingId }` con secret (opcional).
 | Secret | Valor prod |
 |---|---|
 | `RESEND_API_KEY` | `re_…` |
-| `APP_ORIGIN` | `https://fastbook.es` |
+| `APP_ORIGIN` | `https://app.fastbook.es` |
 | `BOOKING_EMAIL_FROM` | `Fastbook <noreply@mail.fastbook.es>` (o el from verificado en Resend) |
 | `BOOKING_CONFIRMATION_WEBHOOK_SECRET` | string largo (solo si usas webhook/curl) |
 
@@ -32,7 +32,7 @@ También acepta webhook INSERT / `{ bookingId }` con secret (opcional).
 
 ## Preview Vercel (`*.vercel.app`) vs `APP_ORIGIN`
 
-- El **email** siempre usa `APP_ORIGIN` → enlaces/QR del mail apuntan a `https://fastbook.es/...`
+- El **email** siempre usa `APP_ORIGIN` → enlaces/QR del mail apuntan a `https://app.fastbook.es/...`
 - El **QR en pantalla** usa `window.location.origin` → en preview será `https://fastbook-sepia.vercel.app/...`
 
 No bloquea el envío. Ojo: reservas de preview escriben en la **misma** BBDD y mandan mails reales (usa tu email al probar).
