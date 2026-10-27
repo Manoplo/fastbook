@@ -8,6 +8,7 @@ import { EnterpriseCheckEmailPage } from "@src/pages/enterprise-check-email/ente
 import { EnterpriseDashboardPage } from "@src/pages/enterprise-dashboard/enterprise-dashboard";
 import { EnterpriseLoginPage } from "@src/pages/enterprise-login/enterprise-login";
 import { EnterpriseMetricsPage } from "@src/pages/enterprise-metrics/enterprise-metrics";
+import { EnterprisePersonalizationPage } from "@src/pages/enterprise-personalization/enterprise-personalization";
 import { EnterpriseSchedulesPage } from "@src/pages/enterprise-schedules/enterprise-schedules";
 import { EnterpriseSettingsPage } from "@src/pages/enterprise-settings/enterprise-settings";
 import { MarketingRedirect } from "@components/marketing-redirect/marketing-redirect";
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="agenda" element={<EnterpriseAgendaPage />} />
             <Route path="schedules" element={<EnterpriseSchedulesPage />} />
             <Route path="metrics" element={<EnterpriseMetricsPage />} />
+            <Route path="personalization" element={<EnterprisePersonalizationPage />} />
             <Route path="settings" element={<EnterpriseSettingsPage />} />
           </Route>
           <Route path="/:tenantSlug" element={<BookingPage />} />

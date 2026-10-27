@@ -21,7 +21,18 @@ export type TenantService = Pick<
 
 export type TenantWithServices = Pick<
   Tables<'tenants'>,
-  'id' | 'slug' | 'name' | 'booking_note' | 'is_pro'
+  'id'
+  | 'slug'
+  | 'name'
+  | 'booking_note'
+  | 'is_pro'
+  | 'logo_url'
+  | 'brand_primary'
+  | 'brand_secondary'
+  | 'brand_surface'
+  | 'brand_on_surface'
+  | 'brand_font'
+  | 'brand_logo_height'
 > & {
   services: TenantService[]
   tenant_availability: TenantAvailabilityWindow[]
@@ -39,6 +50,13 @@ export async function getTenantBySlug(
       name,
       booking_note,
       is_pro,
+      logo_url,
+      brand_primary,
+      brand_secondary,
+      brand_surface,
+      brand_on_surface,
+      brand_font,
+      brand_logo_height,
       tenant_availability (
         day_of_week,
         start_time,

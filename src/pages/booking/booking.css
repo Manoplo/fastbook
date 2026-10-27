@@ -141,3 +141,10 @@
     padding: 1rem;
   }
 }
+
+.booking__brand-logo {
+  display: block;
+  max-width: min(100%, 16rem);
+  width: auto;
+  object-fit: contain;
+}

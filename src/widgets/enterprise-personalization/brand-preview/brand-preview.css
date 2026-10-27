@@ -1,0 +1,163 @@
+.brand-preview {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid var(--fb-outline-variant);
+  background: var(--fb-surface-container-lowest);
+  box-shadow: var(--fb-shadow-sm);
+}
+
+@media (max-width: 980px) {
+  .brand-preview {
+    position: static;
+  }
+}
+
+.brand-preview__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--fb-on-surface);
+}
+
+.brand-preview__subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--fb-on-surface-variant);
+}
+
+.brand-preview__page {
+  overflow: hidden;
+  border-radius: 0.85rem;
+  border: 1px solid var(--fb-outline-variant);
+  background: var(--fb-background);
+  color: var(--fb-on-surface);
+}
+
+.brand-preview__header {
+  display: flex;
+  align-items: center;
+  min-height: 4rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--fb-surface-container) 60%, transparent);
+  background: var(--fb-surface);
+}
+
+.brand-preview__logo {
+  display: block;
+  max-width: 70%;
+  object-fit: contain;
+}
+
+.brand-preview__fallback-logo {
+  height: 2.25rem;
+  width: auto;
+}
+
+.brand-preview__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.brand-preview__heading {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.brand-preview__text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--fb-on-surface-variant);
+}
+
+.brand-preview__slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brand-preview__slot {
+  padding: 0.45rem 0;
+  border-radius: 0.55rem;
+  border: 1px solid var(--fb-outline-variant);
+  background: var(--fb-surface-container-lowest);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.brand-preview__slot--selected {
+  border-color: var(--fb-primary);
+  background: var(--fb-primary);
+  color: var(--fb-on-primary);
+}
+
+.brand-preview__service {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--fb-primary) 35%, transparent);
+  background: var(--fb-surface-container-low);
+}
+
+.brand-preview__service-name {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.brand-preview__service-meta {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--fb-on-surface-variant);
+}
+
+.brand-preview__service-price {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--fb-primary);
+}
+
+.brand-preview__accent {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--fb-secondary);
+}
+
+.brand-preview__accent-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.brand-preview__cta {
+  min-height: 2.5rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: var(--fb-primary);
+  color: var(--fb-on-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 650;
+  box-shadow: var(--fb-shadow-md);
+  cursor: default;
+}

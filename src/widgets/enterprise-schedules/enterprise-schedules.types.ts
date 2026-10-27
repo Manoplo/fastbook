@@ -18,4 +18,4 @@ export type ServiceFormValues = {
   active: boolean
 }
 
-export type UpgradeProReason = 'service_limit' | 'image_upload'
+export type UpgradeProReason = 'service_limit' | 'image_upload' | 'branding'

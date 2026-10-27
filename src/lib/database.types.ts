@@ -165,27 +165,48 @@ export type Database = {
       tenants: {
         Row: {
           booking_note: string | null
+          brand_font: string | null
+          brand_logo_height: number | null
+          brand_on_surface: string | null
+          brand_primary: string | null
+          brand_secondary: string | null
+          brand_surface: string | null
           created_at: string
           id: string
           is_pro: boolean
+          logo_url: string | null
           name: string
           owner_id: string | null
           slug: string
         }
         Insert: {
           booking_note?: string | null
+          brand_font?: string | null
+          brand_logo_height?: number | null
+          brand_on_surface?: string | null
+          brand_primary?: string | null
+          brand_secondary?: string | null
+          brand_surface?: string | null
           created_at?: string
           id?: string
           is_pro?: boolean
+          logo_url?: string | null
           name: string
           owner_id?: string | null
           slug: string
         }
         Update: {
           booking_note?: string | null
+          brand_font?: string | null
+          brand_logo_height?: number | null
+          brand_on_surface?: string | null
+          brand_primary?: string | null
+          brand_secondary?: string | null
+          brand_surface?: string | null
           created_at?: string
           id?: string
           is_pro?: boolean
+          logo_url?: string | null
           name?: string
           owner_id?: string | null
           slug?: string
