@@ -33,6 +33,7 @@ function makeBooking(
     customer_phone: '+34 679427903',
     status: 'confirmed',
     check_in_token: 'a1b2c3d4e5f6789012345678abcdef01',
+    reminder_sent_at: null,
     created_at: '2026-10-12T00:00:00Z',
     notes: null,
     service: {
