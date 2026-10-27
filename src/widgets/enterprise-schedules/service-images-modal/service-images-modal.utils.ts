@@ -79,7 +79,7 @@ export function rejectionMessage(reason: ImageFileRejectionReason): string {
   }
 }
 
-function loadImageElement(file: File): Promise<HTMLImageElement> {
+export function loadImageElement(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const image = new Image()
@@ -95,7 +95,7 @@ function loadImageElement(file: File): Promise<HTMLImageElement> {
   })
 }
 
-function canvasToBlob(
+export function canvasToBlob(
   canvas: HTMLCanvasElement,
   type: string,
   quality: number,

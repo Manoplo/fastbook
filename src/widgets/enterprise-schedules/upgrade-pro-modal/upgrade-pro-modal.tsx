@@ -1,19 +1,27 @@
 import { Link } from 'react-router-dom'
 import { Modal } from '@components/modal/modal'
 import { FREE_MAX_SERVICES } from '../enterprise-schedules.utils'
+import type { UpgradeProReason } from '../enterprise-schedules.types'
 import type { UpgradeProModalProps } from './upgrade-pro-modal.types'
 import './upgrade-pro-modal.css'
 
-export function UpgradeProModal({ open, reason, onClose }: UpgradeProModalProps) {
-  const title =
-    reason === 'image_upload'
-      ? 'Imágenes disponibles en fastbook Pro'
-      : `Límite de ${FREE_MAX_SERVICES} servicios en el plan gratuito`
+const UPGRADE_COPY: Record<UpgradeProReason, { title: string; body: string }> = {
+  image_upload: {
+    title: 'Imágenes disponibles en fastbook Pro',
+    body: 'En el plan gratuito no se pueden subir imágenes a la ficha pública de tus servicios. Con Pro podrás incorporar galería en alta definición y más servicios activos.',
+  },
+  service_limit: {
+    title: `Límite de ${FREE_MAX_SERVICES} servicios en el plan gratuito`,
+    body: `Has alcanzado el límite de ${FREE_MAX_SERVICES} servicios activos del plan gratuito. Para añadir un tercero o incorporar galería de imágenes, actualiza a fastbook Pro.`,
+  },
+  branding: {
+    title: 'Personalización disponible en fastbook Pro',
+    body: 'Con Pro tu página de reservas luce tu marca: logotipo propio, colores corporativos y tipografía a tu medida.',
+  },
+}
 
-  const body =
-    reason === 'image_upload'
-      ? 'En el plan gratuito no se pueden subir imágenes a la ficha pública de tus servicios. Con Pro podrás incorporar galería en alta definición y más servicios activos.'
-      : `Has alcanzado el límite de ${FREE_MAX_SERVICES} servicios activos del plan gratuito. Para añadir un tercero o incorporar galería de imágenes, actualiza a fastbook Pro.`
+export function UpgradeProModal({ open, reason, onClose }: UpgradeProModalProps) {
+  const { title, body } = UPGRADE_COPY[reason]
 
   return (
     <Modal

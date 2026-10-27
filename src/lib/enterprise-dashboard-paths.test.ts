@@ -20,6 +20,7 @@ describe('isEnterpriseDashboardSection', () => {
   it('accepts known sections', () => {
     expect(isEnterpriseDashboardSection('agenda')).toBe(true)
     expect(isEnterpriseDashboardSection('schedules')).toBe(true)
+    expect(isEnterpriseDashboardSection('personalization')).toBe(true)
   })
 
   it('rejects unknown values', () => {

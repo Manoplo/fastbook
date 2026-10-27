@@ -31,6 +31,8 @@ import {
   getTenantBySlug,
   resolveSlotDurationMinutes,
 } from '@src/lib/get-tenant-by-slug'
+import { loadBrandFont } from '@src/lib/tenant-branding-fonts'
+import { resolvePublicBranding } from '@src/lib/tenant-branding.utils'
 import { useBookingSelectionStore } from '@src/stores/booking-selection-store'
 import './booking.css'
 
@@ -97,6 +99,13 @@ export function BookingPage() {
     resetCustomerForm(CUSTOMER_DETAILS_DEFAULT_VALUES)
   }, [tenantSlug, resetSelection, resetCustomerForm])
 
+  const brandFontKey = data ? (resolvePublicBranding(data)?.draft.fontKey ?? null) : null
+  useEffect(() => {
+    if (brandFontKey) {
+      void loadBrandFont(brandFontKey)
+    }
+  }, [brandFontKey])
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [step])
@@ -154,6 +163,7 @@ export function BookingPage() {
   }
 
   const tenant = data
+  const branding = resolvePublicBranding(tenant)
   const windows = getTenantAvailabilityWindows(tenant)
   const selectedService = tenant.services.find((service) => service.id === serviceId)
   const durationMinutes = selectedService
@@ -215,10 +225,20 @@ export function BookingPage() {
       className={classNames('booking', {
         'booking--with-continue-bar': showContinueBar,
       })}
+      style={branding?.style}
     >
       <header className="booking__header">
         <div className="booking__header-inner">
-          <FastbookLogo />
+          {branding?.logoUrl ? (
+            <img
+              className="booking__brand-logo"
+              src={branding.logoUrl}
+              alt={tenant.name}
+              style={{ height: `${branding.logoHeight}px` }}
+            />
+          ) : (
+            <FastbookLogo />
+          )}
         </div>
       </header>
 

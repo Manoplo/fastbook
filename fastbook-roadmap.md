@@ -164,6 +164,16 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] Guía operativa: [`docs/domain-split.md`](docs/domain-split.md)
 - [ ] **Cutover manual (owner):** DNS Vercel (`fastbook.es` → Astro, `app.fastbook.es` → SPA), Auth Site URL + Redirect URLs, secret `APP_ORIGIN`
 
+### Personalización de marca (Pro) ✅ (rama `feat/personalization`)
+
+- [x] Migración `20261027000000_tenant_branding` (+ surface/text): `logo_url`, `brand_primary`, `brand_secondary`, `brand_surface`, `brand_on_surface`, `brand_font`, `brand_logo_height` + bucket `tenant-branding` (webp/png, 1 MB) RLS owner
+- [x] Vista `/enterprise/:tenantSlug/personalization` en la floating bar (`widgets/enterprise-personalization`): logo (drag & drop, PNG/JPEG/SVG → WebP ≤512×256, SVG rasterizado), slider de tamaño, color primario/secundario (picker + hex, aviso de contraste), 6 fuentes `@fontsource-variable` cargadas bajo demanda, vista previa en vivo
+- [x] Página pública `/:slug` aplica el branding **solo si `is_pro`** (variables `--fb-*` en el contenedor `.booking` + logo propio en la cabecera). Free: vista visible pero bloqueada con CTA a Pro
+- [x] Libs: `tenant-branding(.utils|-storage|-fonts).ts` + tests
+- [x] Migración aplicada en proyecto remoto `ptgltexbfxjqmyozcavt` (`tenant_branding` / `20261027111633`): columnas + checks + bucket `tenant-branding` + 4 policies Storage
+- [x] Follow-up colores: `brand_surface` + `brand_on_surface` (fondo de cajas + tipografía), tokens `--fb-surface-*` / `--fb-on-surface` sobrescritos, `--fb-on-primary` derivado del primario (CTAs), preview alineado con booking. Migración remota `tenant_branding_surface_text`
+- [ ] Enforcement server-side de Pro para estas columnas (hoy solo UI + `resolvePublicBranding`)
+
 ### Siguiente (prioridad)
 
 1. **Cutover DNS + Auth** (ver `docs/domain-split.md`): apuntar dominios, actualizar Supabase Auth y `APP_ORIGIN`.
@@ -194,6 +204,13 @@ erDiagram
     text name
     text booking_note
     boolean is_pro
+    text logo_url
+    text brand_primary
+    text brand_secondary
+    text brand_surface
+    text brand_on_surface
+    text brand_font
+    smallint brand_logo_height
     uuid owner_id FK
     timestamptz created_at
   }
@@ -241,7 +258,7 @@ erDiagram
 
 | Tabla | Qué es |
 |---|---|
-| `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `is_pro` (plan). `booking_note` antes de confirmar. |
+| `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `is_pro` (plan). `booking_note` antes de confirmar. Branding Pro: `logo_url`, `brand_primary`/`brand_secondary`, `brand_surface`/`brand_on_surface` (cajas + tipografía), `brand_font` (catálogo cerrado), `brand_logo_height` (24–64). |
 | `services` | Catálogo por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. Free: máx. 2 (UI). Pro: `image_urls` (≤10) + `youtube_url`; `image_url` portada/legacy. |
 | `tenant_availability` | Ventanas semanales del negocio (`day_of_week` 0=dom…6=sáb + `start_time`/`end_time`). |
 | `bookings` | Reserva concreta. Unique `(service_id, booking_date, start_time)` evita dobles. `check_in_token` opaco para QR. Status: `confirmed` \| `cancelled`. |
@@ -272,6 +289,8 @@ erDiagram
 | [`20261012000000_tenant_availability_and_pro.sql`](supabase/migrations/20261012000000_tenant_availability_and_pro.sql) | `is_pro` + `tenant_availability`; drop `service_availability` |
 | [`20261018000000_service_images_gallery_and_storage.sql`](supabase/migrations/20261018000000_service_images_gallery_and_storage.sql) | `image_urls` + `youtube_url`; bucket `service-images` + policies |
 | [`20261024000000_booking_check_in_token.sql`](supabase/migrations/20261024000000_booking_check_in_token.sql) | `bookings.check_in_token` unique not null (QR / check-in) |
+| [`20261027000000_tenant_branding.sql`](supabase/migrations/20261027000000_tenant_branding.sql) | Branding Pro en `tenants` + bucket `tenant-branding` + RLS Storage |
+| [`20261027120000_tenant_branding_surface_text.sql`](supabase/migrations/20261027120000_tenant_branding_surface_text.sql) | `brand_surface` + `brand_on_surface` (fondos oscuros + tipografía clara) |
 
 **Proyecto Supabase:** `fastbook` (`ptgltexbfxjqmyozcavt`, `eu-west-1`).
 

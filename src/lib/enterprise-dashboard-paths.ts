@@ -2,6 +2,7 @@ export const ENTERPRISE_DASHBOARD_SECTIONS = [
   'agenda',
   'schedules',
   'metrics',
+  'personalization',
   'settings',
 ] as const
 
