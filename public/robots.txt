@@ -1,0 +1,4 @@
+# La app (login, dashboard, reservas) no debe indexarse.
+# El marketing indexable está en https://fastbook.es
+User-agent: *
+Disallow: /
