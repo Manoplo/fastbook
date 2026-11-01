@@ -23,7 +23,7 @@ export function buildBookingReminderEmail(
     `Hola ${greetingName},`,
     '',
     `Te recordamos tu cita en ${input.tenantName}.`,
-    `Servicio: ${input.serviceName}`,
+    `Cita: ${input.serviceName}`,
     `Fecha: ${input.dateLabel}`,
     `Hora: ${input.timeLabel}`,
     '',
@@ -54,7 +54,7 @@ export function buildBookingReminderEmail(
                 </p>
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f8fa;border-radius:10px;padding:16px;">
                   <tr>
-                    <td style="padding:4px 0;font-size:14px;color:#666;">Servicio</td>
+                    <td style="padding:4px 0;font-size:14px;color:#666;">Cita</td>
                     <td align="right" style="padding:4px 0;font-size:14px;font-weight:700;">${escapeHtml(input.serviceName)}</td>
                   </tr>
                   <tr>

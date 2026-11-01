@@ -156,7 +156,7 @@ async function sendReminderEmail(input: {
   const email = buildBookingReminderEmail({
     tenantName: row.tenant_name,
     customerName: row.customer_name,
-    serviceName: row.service_name || 'Servicio',
+    serviceName: row.service_name || `Cita con ${row.tenant_name}`,
     dateLabel: formatBookingDateLabel(row.booking_date),
     timeLabel: formatBookingTimeLabel(row.start_time),
     checkInUrl,

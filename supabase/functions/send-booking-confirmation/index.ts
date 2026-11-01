@@ -123,7 +123,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const dateLabel = formatBookingDateLabel(booking.booking_date)
   const timeLabel = formatBookingTimeLabel(booking.start_time)
-  const serviceName = service?.name ?? 'Servicio'
+  const serviceName = service?.name ?? `Cita con ${tenant.name}`
   const checkInUrl = `${appOrigin}${bookingCheckInPath(
     tenant.slug,
     booking.check_in_token,

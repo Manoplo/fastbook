@@ -29,7 +29,8 @@ export type AgendaBookingCardModel = {
   customerPhone: string | null
   notes: string | null
   serviceName: string
-  price: number
+  /** Null cuando la cita no tiene servicio de catálogo. */
+  price: number | null
   dbStatus: string
   uiStatus: AgendaBookingUiStatus
   refLabel: string

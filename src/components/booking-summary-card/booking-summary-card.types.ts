@@ -3,8 +3,10 @@ export type BookingSummaryCardProps = {
   durationMinutes: number
   dateKey: string
   startTime: string
-  price: number
+  /** Null cuando la cita no está ligada a un servicio con precio. */
+  price: number | null
   imageUrl?: string | null
+  hasServices?: boolean
   canConfirm?: boolean
   isSubmitting?: boolean
   submitError?: string | null

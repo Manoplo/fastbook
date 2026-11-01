@@ -21,6 +21,7 @@ import { ServiceList } from '@components/service-list/service-list'
 import { SiteFooter } from '@components/site-footer/site-footer'
 import { TimeSlots } from '@components/time-slots/time-slots'
 import { buildAvailableDates } from '@components/time-slots/time-slots.utils'
+import { bookingAppointmentLabel } from '@src/lib/booking-label.utils'
 import {
   BookingConflictError,
   createBooking,
@@ -165,24 +166,35 @@ export function BookingPage() {
   const tenant = data
   const branding = resolvePublicBranding(tenant)
   const windows = getTenantAvailabilityWindows(tenant)
+  const hasServices = tenant.services.length > 0
   const selectedService = tenant.services.find((service) => service.id === serviceId)
   const durationMinutes = selectedService
     ? selectedService.duration_minutes
     : resolveSlotDurationMinutes(tenant.services)
+  const appointmentLabel = bookingAppointmentLabel({
+    serviceName: selectedService?.name,
+    tenantName: tenant.name,
+  })
+  const appointmentPrice = selectedService ? Number(selectedService.price) : null
   const availableDates = buildAvailableDates({
     windows,
     from: startOfDay(new Date()),
   })
   const selectedDate = dateKey ? parseDateKey(dateKey) : null
-  const selectionComplete = Boolean(dateKey && startTime && selectedService)
+  const selectionComplete = Boolean(
+    dateKey && startTime && (!hasServices || selectedService),
+  )
   const showContinueBar = step === 1 && selectionComplete
   const canConfirm =
     isCustomerFormValid &&
-    Boolean(selectedService && dateKey && startTime) &&
+    Boolean(dateKey && startTime && (!hasServices || selectedService)) &&
     !createBookingMutation.isPending
 
   async function handleConfirmBooking(values: CustomerDetailsFormValues) {
-    if (!selectedService || !dateKey || !startTime) {
+    if (!dateKey || !startTime) {
+      return
+    }
+    if (hasServices && !selectedService) {
       return
     }
 
@@ -191,10 +203,10 @@ export function BookingPage() {
     try {
       const result = await createBookingMutation.mutateAsync({
         tenantId: tenant.id,
-        serviceId: selectedService.id,
+        serviceId: selectedService?.id ?? null,
         bookingDate: dateKey,
         startTime,
-        durationMinutes: selectedService.duration_minutes,
+        durationMinutes,
         customerName: values.fullName,
         customerEmail: values.email,
         customerPhone: formatCustomerPhone(values.phoneCountryCode, values.phone),
@@ -283,7 +295,11 @@ export function BookingPage() {
         </section>
 
         {step === 1 ? (
-          <div className="booking__body">
+          <div
+            className={classNames('booking__body', {
+              'booking__body--no-services': !hasServices,
+            })}
+          >
             <section
               className="booking__schedule"
               aria-label="Fecha y franja horaria"
@@ -304,13 +320,17 @@ export function BookingPage() {
 
             <section
               className="booking__services-column"
-              aria-label="Servicios y comentarios"
+              aria-label={
+                hasServices ? 'Servicios y comentarios' : 'Comentarios'
+              }
             >
-              <ServiceList
-                services={tenant.services}
-                value={serviceId}
-                onChange={setServiceId}
-              />
+              {hasServices ? (
+                <ServiceList
+                  services={tenant.services}
+                  value={serviceId}
+                  onChange={setServiceId}
+                />
+              ) : null}
               <BookingNotes value={notes} onChange={setNotes} />
             </section>
           </div>
@@ -325,14 +345,15 @@ export function BookingPage() {
               noValidate
             >
               <CustomerDetailsForm tenantName={tenant.name} />
-              {selectedService && dateKey && startTime ? (
+              {dateKey && startTime && (!hasServices || selectedService) ? (
                 <BookingSummaryCard
-                  serviceName={selectedService.name}
-                  durationMinutes={selectedService.duration_minutes}
+                  serviceName={appointmentLabel}
+                  durationMinutes={durationMinutes}
                   dateKey={dateKey}
                   startTime={startTime}
-                  price={selectedService.price}
-                  imageUrl={selectedService.image_url}
+                  price={appointmentPrice}
+                  imageUrl={selectedService?.image_url}
+                  hasServices={hasServices}
                   canConfirm={canConfirm}
                   isSubmitting={createBookingMutation.isPending}
                   submitError={submitError}
@@ -344,11 +365,15 @@ export function BookingPage() {
           </FormProvider>
         ) : null}
 
-        {step === 3 && selectedService && dateKey && startTime && checkInToken ? (
+        {step === 3 &&
+        dateKey &&
+        startTime &&
+        checkInToken &&
+        (!hasServices || selectedService) ? (
           <BookingConfirmation
             tenantName={tenant.name}
             tenantSlug={tenant.slug}
-            serviceName={selectedService.name}
+            serviceName={appointmentLabel}
             dateKey={dateKey}
             startTime={startTime}
             customerEmail={confirmedEmail}
@@ -360,13 +385,13 @@ export function BookingPage() {
 
       <SiteFooter />
 
-      {showContinueBar && selectedService && dateKey && startTime ? (
+      {showContinueBar && dateKey && startTime ? (
         <BookingContinueBar
-          serviceName={selectedService.name}
-          durationMinutes={selectedService.duration_minutes}
+          serviceName={appointmentLabel}
+          durationMinutes={durationMinutes}
           dateKey={dateKey}
           startTime={startTime}
-          price={selectedService.price}
+          price={appointmentPrice}
           onContinue={() => setStep(2)}
         />
       ) : null}

@@ -97,6 +97,10 @@
     gap: 2rem;
   }
 
+  .booking__body--no-services:not(.booking__body--step-2) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+  }
+
   .booking__body--step-2 {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: 2rem;

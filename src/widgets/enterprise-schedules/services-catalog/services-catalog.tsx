@@ -77,7 +77,11 @@ export function ServicesCatalog({
 
       <ul className="services-catalog__list">
         {services.length === 0 ? (
-          <li className="services-catalog__empty">Aún no tienes servicios. Añade el primero.</li>
+          <li className="services-catalog__empty">
+            Aún no tienes servicios. Las reservas públicas funcionan igual sin
+            catálogo; añade uno si quieres ofrecer tratamientos con precio y
+            duración propios.
+          </li>
         ) : (
           services.map((service) => (
             <li key={service.id} className="services-catalog__item">

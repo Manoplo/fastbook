@@ -63,7 +63,7 @@ export function EnterpriseAgenda() {
 
   const dayBookings = monthBookings
     .filter((booking) => booking.booking_date === selectedKey)
-    .map((booking) => toAgendaBookingCard(booking, now))
+    .map((booking) => toAgendaBookingCard(booking, now, tenant.name))
 
   const filteredBookings = filterAgendaBookings(dayBookings, {
     statusFilter,

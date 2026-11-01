@@ -92,10 +92,13 @@ export function getTenantAvailabilityWindows(
   return tenant.tenant_availability
 }
 
-/** Duración de referencia para calcular huecos antes de elegir servicio. */
+/** Duración por defecto cuando el tenant no tiene servicios de catálogo. */
+export const DEFAULT_SLOT_DURATION_MINUTES = 60
+
+/** Duración de referencia para calcular huecos (o sin catálogo de servicios). */
 export function resolveSlotDurationMinutes(services: TenantService[]): number {
   if (services.length === 0) {
-    return 60
+    return DEFAULT_SLOT_DURATION_MINUTES
   }
   return Math.max(...services.map((service) => service.duration_minutes))
 }

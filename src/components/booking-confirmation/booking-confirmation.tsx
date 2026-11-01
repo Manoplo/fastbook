@@ -50,7 +50,7 @@ export function BookingConfirmation({
 
       <dl className="booking-confirmation__details">
         <div className="booking-confirmation__row">
-          <dt>Servicio</dt>
+          <dt>Cita</dt>
           <dd>{serviceName}</dd>
         </div>
         <div className="booking-confirmation__row">
