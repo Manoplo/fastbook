@@ -1,48 +1,36 @@
-import { supabase } from './supabase-client'
-import type { Tables } from './database.types'
+import { supabase } from "./supabase-client";
+import type { Tables } from "./database.types";
+import { filterPublicServices } from "./get-tenant-by-slug.utils";
 
-export type TenantAvailabilityWindow = Pick<
-  Tables<'tenant_availability'>,
-  'day_of_week' | 'start_time' | 'end_time'
->
+export type TenantAvailabilityWindow = Pick<Tables<"tenant_availability">, "day_of_week" | "start_time" | "end_time">;
 
 export type TenantService = Pick<
-  Tables<'services'>,
-  | 'id'
-  | 'name'
-  | 'price'
-  | 'description'
-  | 'image_url'
-  | 'image_urls'
-  | 'tags'
-  | 'duration_minutes'
-  | 'active'
->
+  Tables<"services">,
+  "id" | "name" | "price" | "description" | "image_url" | "image_urls" | "tags" | "duration_minutes" | "active"
+>;
 
 export type TenantWithServices = Pick<
-  Tables<'tenants'>,
-  'id'
-  | 'slug'
-  | 'name'
-  | 'booking_note'
-  | 'is_pro'
-  | 'logo_url'
-  | 'brand_primary'
-  | 'brand_secondary'
-  | 'brand_surface'
-  | 'brand_on_surface'
-  | 'brand_font'
-  | 'brand_logo_height'
+  Tables<"tenants">,
+  | "id"
+  | "slug"
+  | "name"
+  | "booking_note"
+  | "is_pro"
+  | "logo_url"
+  | "brand_primary"
+  | "brand_secondary"
+  | "brand_surface"
+  | "brand_on_surface"
+  | "brand_font"
+  | "brand_logo_height"
 > & {
-  services: TenantService[]
-  tenant_availability: TenantAvailabilityWindow[]
-}
+  services: TenantService[];
+  tenant_availability: TenantAvailabilityWindow[];
+};
 
-export async function getTenantBySlug(
-  slug: string,
-): Promise<TenantWithServices | null> {
+export async function getTenantBySlug(slug: string): Promise<TenantWithServices | null> {
   const { data, error } = await supabase
-    .from('tenants')
+    .from("tenants")
     .select(
       `
       id,
@@ -75,30 +63,39 @@ export async function getTenantBySlug(
       )
     `,
     )
-    .eq('slug', slug)
-    .maybeSingle()
+    .eq("slug", slug)
+    .maybeSingle();
 
   if (error) {
-    throw error
+    throw error;
   }
 
-  return data
+  if (!data) {
+    return null;
+  }
+
+  // La página pública solo debe mostrar catálogo activo. No confiar solo en RLS:
+  // el owner autenticado también puede leer inactivos vía policy de dashboard.
+  return {
+    ...data,
+    services: filterPublicServices(data.services ?? []),
+  };
 }
 
 /** Ventanas semanales del tenant (horario de negocio). */
 export function getTenantAvailabilityWindows(
-  tenant: Pick<TenantWithServices, 'tenant_availability'>,
+  tenant: Pick<TenantWithServices, "tenant_availability">,
 ): TenantAvailabilityWindow[] {
-  return tenant.tenant_availability
+  return tenant.tenant_availability;
 }
 
 /** Duración por defecto cuando el tenant no tiene servicios de catálogo. */
-export const DEFAULT_SLOT_DURATION_MINUTES = 60
+export const DEFAULT_SLOT_DURATION_MINUTES = 60;
 
 /** Duración de referencia para calcular huecos (o sin catálogo de servicios). */
 export function resolveSlotDurationMinutes(services: TenantService[]): number {
   if (services.length === 0) {
-    return DEFAULT_SLOT_DURATION_MINUTES
+    return DEFAULT_SLOT_DURATION_MINUTES;
   }
-  return Math.max(...services.map((service) => service.duration_minutes))
+  return Math.max(...services.map((service) => service.duration_minutes));
 }

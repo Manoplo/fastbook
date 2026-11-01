@@ -1,1 +1,0 @@
-{"project_id":"ptgltexbfxjqmyozcavt","name":"send-booking-confirmation","entrypoint_path":"index.ts","verify_jwt":false,"files":[{"name":"index.ts","bytes":9531},{"name":"email.ts","bytes":8345},{"name":"utils.ts","bytes":2927}]}

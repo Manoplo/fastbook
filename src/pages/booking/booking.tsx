@@ -295,45 +295,66 @@ export function BookingPage() {
         </section>
 
         {step === 1 ? (
-          <div
-            className={classNames('booking__body', {
-              'booking__body--no-services': !hasServices,
-            })}
-          >
-            <section
-              className="booking__schedule"
-              aria-label="Fecha y franja horaria"
-            >
-              <Calendar
-                value={selectedDate}
-                onChange={(date) => setDateKey(date ? toDateKey(date) : null)}
-                availableDates={availableDates}
-              />
-              <TimeSlots
-                date={selectedDate}
-                value={startTime}
-                onChange={setStartTime}
-                windows={windows}
-                durationMinutes={durationMinutes}
-              />
-            </section>
+          hasServices ? (
+            <div className="booking__body">
+              <section
+                className="booking__schedule"
+                aria-label="Fecha y franja horaria"
+              >
+                <Calendar
+                  value={selectedDate}
+                  onChange={(date) => setDateKey(date ? toDateKey(date) : null)}
+                  availableDates={availableDates}
+                />
+                <TimeSlots
+                  date={selectedDate}
+                  value={startTime}
+                  onChange={setStartTime}
+                  windows={windows}
+                  durationMinutes={durationMinutes}
+                />
+              </section>
 
-            <section
-              className="booking__services-column"
-              aria-label={
-                hasServices ? 'Servicios y comentarios' : 'Comentarios'
-              }
-            >
-              {hasServices ? (
+              <section
+                className="booking__services-column"
+                aria-label="Servicios y comentarios"
+              >
                 <ServiceList
                   services={tenant.services}
                   value={serviceId}
                   onChange={setServiceId}
                 />
-              ) : null}
-              <BookingNotes value={notes} onChange={setNotes} />
-            </section>
-          </div>
+                <BookingNotes value={notes} onChange={setNotes} />
+              </section>
+            </div>
+          ) : (
+            <div className="booking__body booking__body--no-services">
+              <section
+                className="booking__schedule booking__schedule--split"
+                aria-label="Fecha y franja horaria"
+              >
+                <Calendar
+                  value={selectedDate}
+                  onChange={(date) => setDateKey(date ? toDateKey(date) : null)}
+                  availableDates={availableDates}
+                />
+                <TimeSlots
+                  date={selectedDate}
+                  value={startTime}
+                  onChange={setStartTime}
+                  windows={windows}
+                  durationMinutes={durationMinutes}
+                />
+              </section>
+
+              <section
+                className="booking__notes-row"
+                aria-label="Comentarios"
+              >
+                <BookingNotes value={notes} onChange={setNotes} />
+              </section>
+            </div>
+          )
         ) : null}
 
         {step === 2 ? (
