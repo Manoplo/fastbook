@@ -91,10 +91,31 @@
   max-width: none;
 }
 
+.booking__schedule,
+.booking__services-column,
+.booking__notes-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  min-width: 0;
+}
+
+/* Sin servicios: fecha → hora → comentarios (columna en estrecho). */
+.booking__schedule--split {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
 @media (min-width: 1024px) {
-  .booking__body:not(.booking__body--step-2) {
+  .booking__body:not(.booking__body--step-2):not(.booking__body--no-services) {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: 2rem;
+  }
+
+  .booking__body--no-services:not(.booking__body--step-2) {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
   }
 
   .booking__body--step-2 {
@@ -102,14 +123,14 @@
     gap: 2rem;
     align-items: start;
   }
-}
 
-.booking__schedule,
-.booking__services-column {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-  min-width: 0;
+  /* Sin servicios ancho: fecha izq / hora der (orden DOM), notas debajo. */
+  .booking__schedule--split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
 }
 
 .booking__status {

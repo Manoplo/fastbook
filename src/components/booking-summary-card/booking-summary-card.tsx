@@ -23,18 +23,19 @@ export function BookingSummaryCard({
   startTime,
   price,
   imageUrl,
+  hasServices = true,
   canConfirm = false,
   isSubmitting = false,
   submitError = null,
   formId = 'customer-details-form',
   onEdit,
 }: BookingSummaryCardProps) {
-  const formattedPrice = formatSummaryPrice(price)
+  const formattedPrice = price !== null ? formatSummaryPrice(price) : null
   const confirmLabel = isSubmitting
     ? 'Confirmando reserva…'
     : !canConfirm
       ? 'Rellena el formulario para continuar'
-      : hasSaasImplementation
+      : hasSaasImplementation && price !== null
         ? 'Continuar al pago'
         : 'Confirmar reserva y generar QR'
 
@@ -95,12 +96,14 @@ export function BookingSummaryCard({
           <div className="booking-summary-card__divider" aria-hidden="true" />
 
           <div className="booking-summary-card__pricing">
-            <div className="booking-summary-card__price-row">
-              <span>Precio del servicio</span>
-              <span className="booking-summary-card__price-value">{formattedPrice}</span>
-            </div>
+            {formattedPrice !== null ? (
+              <div className="booking-summary-card__price-row">
+                <span>Precio del servicio</span>
+                <span className="booking-summary-card__price-value">{formattedPrice}</span>
+              </div>
+            ) : null}
 
-            {hasSaasImplementation ? (
+            {hasSaasImplementation && formattedPrice !== null ? (
               <>
                 <div className="booking-summary-card__price-row">
                   <span className="booking-summary-card__price-row-label">
@@ -160,7 +163,9 @@ export function BookingSummaryCard({
               className="booking-summary-card__edit"
               onClick={onEdit}
             >
-              ← Modificar fecha o servicio
+              {hasServices
+                ? '← Modificar fecha o servicio'
+                : '← Modificar fecha u hora'}
             </button>
           </div>
         </div>

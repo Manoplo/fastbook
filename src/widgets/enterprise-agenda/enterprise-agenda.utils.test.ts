@@ -43,7 +43,7 @@ function makeBooking(
       duration_minutes: 60,
     },
     ...overrides,
-  }
+  } as TenantBookingRow
 }
 
 function makeCard(
@@ -144,6 +144,7 @@ describe('toAgendaBookingCard + filters', () => {
         customer_name: 'Elena Morales',
       }),
       new Date(2026, 9, 12, 12, 0, 0),
+      'Manoplo',
     )
 
     expect(card.customerName).toBe('Elena Morales')
@@ -151,6 +152,23 @@ describe('toAgendaBookingCard + filters', () => {
     expect(card.uiStatus).toBe('confirmed')
     expect(card.durationMinutes).toBe(60)
     expect(card.price).toBe(400)
+  })
+
+  it('usa «Cita con {tenant}» cuando no hay servicio', () => {
+    const card = toAgendaBookingCard(
+      makeBooking({
+        booking_date: '2026-10-16',
+        start_time: '17:00:00',
+        end_time: '18:00:00',
+        service_id: null,
+        service: null,
+      }),
+      new Date(2026, 9, 12, 12, 0, 0),
+      'Manoplo',
+    )
+
+    expect(card.serviceName).toBe('Cita con Manoplo')
+    expect(card.price).toBeNull()
   })
 
   it('filters by search and status', () => {

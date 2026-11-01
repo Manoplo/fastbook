@@ -60,7 +60,11 @@ export function AgendaBookingCard({ booking }: AgendaBookingCardProps) {
             </span>
             <span className="agenda-booking-card__ref">{booking.refLabel}</span>
           </div>
-          <p className="agenda-booking-card__price">{formatAgendaPrice(booking.price)}</p>
+          {booking.price !== null ? (
+            <p className="agenda-booking-card__price">
+              {formatAgendaPrice(booking.price)}
+            </p>
+          ) : null}
         </div>
 
         <div className="agenda-booking-card__body">

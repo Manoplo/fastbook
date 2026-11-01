@@ -8,7 +8,8 @@ import {
 
 export type CreateBookingInput = {
   tenantId: string
-  serviceId: string
+  /** Null cuando el tenant no tiene servicios activos. */
+  serviceId: string | null
   bookingDate: string
   startTime: string
   durationMinutes: number

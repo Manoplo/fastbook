@@ -23,7 +23,7 @@ export function buildBookingConfirmationEmail(
     `Hola ${greetingName},`,
     '',
     `Tu cita en ${input.tenantName} está confirmada.`,
-    `Servicio: ${input.serviceName}`,
+    `Cita: ${input.serviceName}`,
     `Fecha: ${input.dateLabel}`,
     `Hora: ${input.timeLabel}`,
     '',
@@ -54,7 +54,7 @@ export function buildBookingConfirmationEmail(
                 </p>
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f8fa;border-radius:10px;padding:16px;">
                   <tr>
-                    <td style="padding:4px 0;font-size:14px;color:#666;">Servicio</td>
+                    <td style="padding:4px 0;font-size:14px;color:#666;">Cita</td>
                     <td align="right" style="padding:4px 0;font-size:14px;font-weight:700;">${escapeHtml(input.serviceName)}</td>
                   </tr>
                   <tr>
@@ -119,7 +119,7 @@ export function buildTenantBookingNotificationEmail(
     textLines.push(`Teléfono: ${phone}`)
   }
   textLines.push(
-    `Servicio: ${input.serviceName}`,
+    `Cita: ${input.serviceName}`,
     `Fecha: ${input.dateLabel}`,
     `Hora: ${input.timeLabel}`,
     '',
@@ -166,7 +166,7 @@ export function buildTenantBookingNotificationEmail(
                     <td align="right" style="padding:4px 0;font-size:14px;font-weight:700;">${escapeHtml(input.customerEmail)}</td>
                   </tr>${phoneRow}
                   <tr>
-                    <td style="padding:4px 0;font-size:14px;color:#666;">Servicio</td>
+                    <td style="padding:4px 0;font-size:14px;color:#666;">Cita</td>
                     <td align="right" style="padding:4px 0;font-size:14px;font-weight:700;">${escapeHtml(input.serviceName)}</td>
                   </tr>
                   <tr>

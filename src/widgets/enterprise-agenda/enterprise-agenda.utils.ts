@@ -6,6 +6,7 @@ import {
   startOfDay,
   toDateKey,
 } from '@components/calendar/calendar.utils'
+import { bookingAppointmentLabel } from '@src/lib/booking-label.utils'
 import type { TenantBookingRow } from '@src/lib/tenant-bookings'
 import type {
   AgendaBookingCardModel,
@@ -115,6 +116,7 @@ export function formatAgendaPrice(price: number): string {
 export function toAgendaBookingCard(
   booking: TenantBookingRow,
   now: Date,
+  tenantName: string,
 ): AgendaBookingCardModel {
   const durationFromTimes = durationMinutesBetween(booking.start_time, booking.end_time)
   const durationMinutes =
@@ -132,8 +134,11 @@ export function toAgendaBookingCard(
     customerEmail: booking.customer_email,
     customerPhone: booking.customer_phone,
     notes: booking.notes,
-    serviceName: booking.service?.name ?? 'Servicio',
-    price: Number(booking.service?.price ?? 0),
+    serviceName: bookingAppointmentLabel({
+      serviceName: booking.service?.name,
+      tenantName,
+    }),
+    price: booking.service ? Number(booking.service.price) : null,
     dbStatus: booking.status,
     uiStatus: deriveAgendaUiStatus(booking, now),
     refLabel: formatBookingRef(booking.id),
@@ -200,7 +205,7 @@ export function countAgendaByStatus(
 export function sumProjectedRevenue(bookings: AgendaBookingCardModel[]): number {
   return bookings
     .filter((booking) => booking.uiStatus !== 'cancelled')
-    .reduce((sum, booking) => sum + booking.price, 0)
+    .reduce((sum, booking) => sum + (booking.price ?? 0), 0)
 }
 
 export function countActiveBookings(bookings: AgendaBookingCardModel[]): number {

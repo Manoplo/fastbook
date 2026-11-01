@@ -3,6 +3,7 @@ export type BookingContinueBarProps = {
   durationMinutes: number
   dateKey: string
   startTime: string
-  price: number
+  /** Null cuando la cita no está ligada a un servicio con precio. */
+  price: number | null
   onContinue: () => void
 }

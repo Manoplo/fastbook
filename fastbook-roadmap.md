@@ -40,7 +40,7 @@ Interfaz web en `/:tenantSlug`:
 
 1. Seleccionar un **día**
 2. Seleccionar una **hora**
-3. Seleccionar un **servicio**
+3. Seleccionar un **servicio** (solo si el tenant tiene catálogo activo; si no → `Cita con {tenant}`)
 4. **Apuntarse** (datos de contacto + confirmación)
 
 Progreso (PRs `#1` main-page, `#2` customer-form):
@@ -176,6 +176,17 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] Follow-up colores: `brand_surface` + `brand_on_surface` (fondo de cajas + tipografía), tokens `--fb-surface-*` / `--fb-on-surface` sobrescritos, `--fb-on-primary` derivado del primario (CTAs), preview alineado con booking. Migración remota `tenant_branding_surface_text`
 - [ ] Enforcement server-side de Pro para estas columnas (hoy solo UI + `resolvePublicBranding`)
 
+### Servicios opcionales ✅
+
+Los tenants pueden operar **sin catálogo de servicios**. Si no hay servicios activos, la página pública solo muestra calendario + horas; la etiqueta de la cita es `Cita con {nombreDelTenant}`.
+
+- [x] Migración `bookings_optional_service` (`20261101000000`): `bookings.service_id` nullable; índice único parcial `(tenant_id, booking_date, start_time) WHERE service_id IS NULL`; policy de insert público permite `service_id null` solo si el tenant no tiene servicios activos; `claim_due_booking_reminders` con `LEFT JOIN` + `coalesce(s.name, 'Cita con ' || t.name)`
+- [x] Follow-up: filtro FE de servicios `active` en `getTenantBySlug` (owner RLS filtraba mal en público) + FK `ON DELETE SET NULL` (`20261101000001`)
+- [x] FE pública: ocultar `ServiceList` sin servicios; duración por defecto 60 min; `createBooking` acepta `serviceId: null`
+- [x] Resumen / barra continuar / confirmación / agenda: etiqueta `bookingAppointmentLabel`; precio oculto sin servicio
+- [x] Edge Functions `send-booking-confirmation` / `send-booking-reminders` redeployadas con fallback `Cita con {tenant}`
+- [x] Types FE (`database.types.ts`) + tests (`booking-label.utils`, agenda)
+
 ### Siguiente (prioridad)
 
 1. **Probar aviso al tenant + recordatorio Pro:** reserva → 2 mails (cliente + owner). Para D-1: cita Pro con inicio en ~23.5 h y forzar cron / curl a `send-booking-reminders` (secret en Vault).
@@ -199,7 +210,7 @@ erDiagram
   tenants ||--o{ services : "tiene"
   tenants ||--o{ tenant_availability : "define"
   tenants ||--o{ bookings : "recibe"
-  services ||--o{ bookings : "reserva"
+  services |o--o{ bookings : "reserva (opcional)"
 
   tenants {
     uuid id PK
@@ -244,7 +255,7 @@ erDiagram
   bookings {
     uuid id PK
     uuid tenant_id FK
-    uuid service_id FK
+    uuid service_id FK "nullable"
     date booking_date
     time start_time
     time end_time
@@ -263,15 +274,15 @@ erDiagram
 | Tabla | Qué es |
 |---|---|
 | `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `is_pro` (plan). `booking_note` antes de confirmar. Branding Pro: `logo_url`, `brand_primary`/`brand_secondary`, `brand_surface`/`brand_on_surface` (cajas + tipografía), `brand_font` (catálogo cerrado), `brand_logo_height` (24–64). |
-| `services` | Catálogo por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. Free: máx. 2 (UI). Pro: `image_urls` (≤10) + `youtube_url`; `image_url` portada/legacy. |
+| `services` | Catálogo **opcional** por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. Free: máx. 2 (UI). Pro: `image_urls` (≤10) + `youtube_url`; `image_url` portada/legacy. Sin servicios activos → reserva genérica. |
 | `tenant_availability` | Ventanas semanales del negocio (`day_of_week` 0=dom…6=sáb + `start_time`/`end_time`). |
-| `bookings` | Reserva concreta. Unique `(service_id, booking_date, start_time)` evita dobles. `check_in_token` opaco para QR. Status: `confirmed` \| `cancelled`. `reminder_sent_at` = recordatorio D-1 enviado (Pro). |
+| `bookings` | Reserva concreta. `service_id` nullable. Unique `(service_id, booking_date, start_time)` + índice parcial sin servicio `(tenant_id, booking_date, start_time)`. `check_in_token` opaco para QR. Status: `confirmed` \| `cancelled`. `reminder_sent_at` = recordatorio D-1 enviado (Pro). |
 
 ### Relaciones y flujo
 
-1. Un **tenant** tiene muchos **services**, un **horario semanal** (`tenant_availability`) y un **owner** (`owner_id`).
-2. El FE público calcula slots libres: ventanas del tenant − bookings confirmadas, usando `duration_minutes` del servicio.
-3. Al apuntarse se crea un **booking** ligado a tenant + service + fecha/hora + datos del cliente.
+1. Un **tenant** tiene cero o muchos **services**, un **horario semanal** (`tenant_availability`) y un **owner** (`owner_id`).
+2. El FE público calcula slots libres: ventanas del tenant − bookings confirmadas, usando `duration_minutes` del servicio (o **60 min** si no hay catálogo).
+3. Al apuntarse se crea un **booking** ligado a tenant + fecha/hora + datos del cliente; `service_id` solo si hay catálogo activo.
 4. Alta empresa: `signUp` → (opcional confirm email) → `ensureOwnedTenant` inserta fila en `tenants` con `owner_id` (`is_pro = false` por defecto).
 
 ### RLS (Row Level Security)
@@ -297,6 +308,7 @@ erDiagram
 | [`20261027120000_tenant_branding_surface_text.sql`](supabase/migrations/20261027120000_tenant_branding_surface_text.sql) | `brand_surface` + `brand_on_surface` (fondos oscuros + tipografía clara) |
 | [`20261027180000_booking_reminder_pro.sql`](supabase/migrations/20261027180000_booking_reminder_pro.sql) | `reminder_sent_at` + RPCs claim/release + auth cron (solo Pro) |
 | [`20261027180100_booking_reminder_cron.sql`](supabase/migrations/20261027180100_booking_reminder_cron.sql) | Vault secrets + `pg_cron` `*/15` → `send-booking-reminders` |
+| [`20261101000000_bookings_optional_service.sql`](supabase/migrations/20261101000000_bookings_optional_service.sql) | `service_id` nullable + policy insert + reminders sin servicio |
 
 **Proyecto Supabase:** `fastbook` (`ptgltexbfxjqmyozcavt`, `eu-west-1`).
 

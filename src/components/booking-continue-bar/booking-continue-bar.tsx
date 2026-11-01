@@ -37,12 +37,14 @@ export function BookingContinueBar({
         </div>
 
         <div className="booking-continue-bar__action">
-          <div className="booking-continue-bar__price">
-            <span className="booking-continue-bar__price-label">Importe total</span>
-            <span className="booking-continue-bar__price-value">
-              {formatServicePrice(price)}
-            </span>
-          </div>
+          {price !== null ? (
+            <div className="booking-continue-bar__price">
+              <span className="booking-continue-bar__price-label">Importe total</span>
+              <span className="booking-continue-bar__price-value">
+                {formatServicePrice(price)}
+              </span>
+            </div>
+          ) : null}
           <button
             type="button"
             className="booking-continue-bar__button"
