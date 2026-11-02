@@ -9,7 +9,6 @@ export type BrandIdentityFormProps = {
   isDirty: boolean
   isSaving: boolean
   errorMessage: string | null
-  successMessage: string | null
   onLogoSelect: (file: File) => void
   onLogoRemove: () => void
   onDraftChange: (patch: Partial<BrandingDraft>) => void

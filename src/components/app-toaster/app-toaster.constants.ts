@@ -1,0 +1,1 @@
+export const APP_TOAST_DURATION_MS = 4000
