@@ -69,7 +69,6 @@ export function BrandIdentityForm({
   isDirty,
   isSaving,
   errorMessage,
-  successMessage,
   onLogoSelect,
   onLogoRemove,
   onDraftChange,
@@ -337,11 +336,6 @@ export function BrandIdentityForm({
         {errorMessage ? (
           <p className="brand-identity-form__error" role="alert">
             {errorMessage}
-          </p>
-        ) : null}
-        {successMessage ? (
-          <p className="brand-identity-form__success" role="status">
-            {successMessage}
           </p>
         ) : null}
         <button

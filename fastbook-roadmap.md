@@ -204,6 +204,11 @@ Los tenants pueden operar **sin catálogo de servicios**. Si no hay servicios ac
 - [x] Página pública: calendario respeta min/max; link al sitio (solo Pro) bajo “Reserva tu cita en…”, tipografía más pequeña, color claro → oscuro + flecha NE con hover.
 - [x] Personalización Pro: campo URL + preview.
 
+### Toasts tenant (Sonner) ✅
+
+- [x] Dependencia `sonner` + `AppToaster` headless (`components/app-toaster`) con estilos DS (`--fb-*`), barra timer 4 s y botón dismiss
+- [x] Feedback en acciones de guardado / borrado / modificación del tenant: horarios, servicios (crear/editar/borrar), galería y personalización de marca
+
 ### Siguiente (prioridad)
 
 1. **Enforcement server-side de plan Free** (máx. 2 servicios activos, `image_urls`/`youtube_url`/branding/`website_url` solo si `is_pro`) — hoy abusables vía API aunque la UI lo bloquee.

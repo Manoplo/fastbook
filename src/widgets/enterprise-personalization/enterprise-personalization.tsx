@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { showErrorToast, showSuccessToast } from '@components/app-toaster/show-app-toast'
 import type { EnterpriseDashboardOutletContext } from '@src/pages/enterprise-dashboard/enterprise-dashboard.types'
 import { getTenantBranding, updateTenantBranding } from '@src/lib/tenant-branding'
 import { deleteTenantLogoByUrl, uploadTenantLogo } from '@src/lib/tenant-branding-storage'
@@ -45,7 +46,6 @@ export function EnterprisePersonalization() {
   const [logo, setLogo] = useState<BrandLogoState>(null)
   const [hydrated, setHydrated] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
 
   if (brandingQuery.data && !hydrated) {
@@ -103,20 +103,23 @@ export function EnterprisePersonalization() {
     },
     onSuccess: async (saved) => {
       setErrorMessage(null)
-      setSuccessMessage('Personalización guardada. Ya está visible en tu página pública.')
       setLogo(logoStateFromUrl(saved.logo_url))
       setWebsiteUrl(saved.website_url ?? '')
       queryClient.setQueryData(['tenant-branding', tenant.id], saved)
       await queryClient.invalidateQueries({ queryKey: ['tenant', tenant.slug] })
+      showSuccessToast(
+        'Personalización guardada',
+        'Ya está visible en tu página pública.',
+      )
     },
     onError: (error: Error) => {
-      setSuccessMessage(null)
-      setErrorMessage(error.message || 'No se pudo guardar la personalización.')
+      const message = error.message || 'No se pudo guardar la personalización.'
+      setErrorMessage(message)
+      showErrorToast('No se pudo guardar', message)
     },
   })
 
   async function handleLogoSelect(file: File) {
-    setSuccessMessage(null)
     const validation = validateLogoFile(file)
     if (!validation.ok) {
       setErrorMessage(logoRejectionMessage(validation.reason))
@@ -197,21 +200,17 @@ export function EnterprisePersonalization() {
           isDirty={isDirty}
           isSaving={saveMutation.isPending}
           errorMessage={errorMessage}
-          successMessage={successMessage}
           onLogoSelect={(file) => {
             void handleLogoSelect(file)
           }}
           onLogoRemove={() => {
             setLogo(null)
-            setSuccessMessage(null)
           }}
           onDraftChange={(patch) => {
             setDraft({ ...draft, ...patch })
-            setSuccessMessage(null)
           }}
           onWebsiteUrlChange={(value) => {
             setWebsiteUrl(value)
-            setSuccessMessage(null)
           }}
           onReset={() => {
             setDraft(
@@ -226,7 +225,6 @@ export function EnterprisePersonalization() {
             )
             setWebsiteUrl('')
             setLogo(null)
-            setSuccessMessage(null)
           }}
           onSave={() => {
             void saveMutation.mutateAsync().catch(() => undefined)

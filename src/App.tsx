@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AppToaster } from "@components/app-toaster/app-toaster";
 import { CookieBanner } from "@components/cookie-banner/cookie-banner";
 import { RequireAuth } from "@components/require-auth/require-auth";
 import { AuthSessionProvider } from "@src/providers/auth-session-provider";
@@ -44,6 +45,7 @@ export default function App() {
         </Routes>
       </AuthSessionProvider>
       <CookieBanner />
+      <AppToaster />
     </BrowserRouter>
   );
 }

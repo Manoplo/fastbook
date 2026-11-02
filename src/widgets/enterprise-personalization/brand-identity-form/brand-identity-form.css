@@ -428,19 +428,11 @@
   line-height: 1.45;
 }
 
-.brand-identity-form__error,
-.brand-identity-form__success {
+.brand-identity-form__error {
   margin: 0;
   flex: 1 1 100%;
   font-size: 0.8rem;
-}
-
-.brand-identity-form__error {
   color: var(--fb-error, #ba1a1a);
-}
-
-.brand-identity-form__success {
-  color: var(--fb-tertiary);
 }
 
 .brand-identity-form__save {

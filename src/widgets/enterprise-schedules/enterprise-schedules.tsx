@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { showErrorToast, showSuccessToast } from "@components/app-toaster/show-app-toast";
 import { ConfirmModal } from "@components/confirm-modal/confirm-modal";
 import type { EnterpriseDashboardOutletContext } from "@src/pages/enterprise-dashboard/enterprise-dashboard.types";
 import {
@@ -134,14 +135,20 @@ export function EnterpriseSchedules() {
       await queryClient.invalidateQueries({ queryKey: ["tenant-availability", tenant.id] });
       await queryClient.invalidateQueries({ queryKey: ["owned-tenant"] });
       await queryClient.invalidateQueries({ queryKey: ["tenant", tenant.slug] });
+      showSuccessToast("Horarios guardados", "La disponibilidad ya está actualizada.");
     },
     onError: (error: Error) => {
-      setScheduleError(error.message || "No se pudieron guardar los horarios.");
+      const message = error.message || "No se pudieron guardar los horarios.";
+      setScheduleError(message);
+      showErrorToast("No se pudieron guardar los horarios", message);
     },
   });
 
   const saveServiceMutation = useMutation({
-    mutationFn: async (): Promise<{ softGalleryError?: string }> => {
+    mutationFn: async (): Promise<{
+      softGalleryError?: string;
+      action: "created" | "updated";
+    }> => {
       const parsed = parseServiceFormValues(formValues);
       if (!parsed) {
         throw new Error("Revisa nombre, duración y precio del servicio.");
@@ -167,7 +174,7 @@ export function EnterpriseSchedules() {
 
         const gallery = pendingGallery;
         if (!gallery || (gallery.items.length === 0 && !gallery.youtubeUrl.trim())) {
-          return {};
+          return { action: "created" };
         }
 
         try {
@@ -180,11 +187,12 @@ export function EnterpriseSchedules() {
           });
           revokeLocalPreviewUrls(gallery.items);
           setPendingGallery(null);
-          return {};
+          return { action: "created" };
         } catch (error) {
           revokeLocalPreviewUrls(gallery.items);
           setPendingGallery(null);
           return {
+            action: "created",
             softGalleryError:
               error instanceof Error
                 ? error.message
@@ -205,7 +213,7 @@ export function EnterpriseSchedules() {
         description: parsed.description,
         active: parsed.active,
       });
-      return {};
+      return { action: "updated" };
     },
     onSuccess: async (result) => {
       setEditingServiceId(null);
@@ -214,19 +222,26 @@ export function EnterpriseSchedules() {
       await queryClient.invalidateQueries({ queryKey: ["tenant", tenant.slug] });
 
       if (result.softGalleryError) {
-        setServiceError(
-          `Servicio creado, pero no se pudieron subir las imágenes (${result.softGalleryError}). Ábrelo desde la card para reintentar.`,
-        );
+        const message = `Servicio creado, pero no se pudieron subir las imágenes (${result.softGalleryError}). Ábrelo desde la card para reintentar.`;
+        setServiceError(message);
+        showErrorToast("Servicio creado con avisos", message);
         return;
       }
       setServiceError(null);
+      if (result.action === "created") {
+        showSuccessToast("Servicio creado", "Ya aparece en tu catálogo.");
+      } else {
+        showSuccessToast("Servicio actualizado", "Los cambios ya están guardados.");
+      }
     },
     onError: (error: Error) => {
       if (error.message.includes("Límite del plan")) {
         setServiceError(null);
         return;
       }
-      setServiceError(error.message || "No se pudo guardar el servicio.");
+      const message = error.message || "No se pudo guardar el servicio.";
+      setServiceError(message);
+      showErrorToast("No se pudo guardar el servicio", message);
     },
   });
 
@@ -237,10 +252,18 @@ export function EnterpriseSchedules() {
         tenantId: tenant.id,
         serviceId: service.id,
       });
+      return service;
     },
-    onSuccess: async () => {
+    onSuccess: async (service) => {
       await queryClient.invalidateQueries({ queryKey: ["tenant-services", tenant.id] });
       await queryClient.invalidateQueries({ queryKey: ["tenant", tenant.slug] });
+      showSuccessToast("Servicio eliminado", `"${service.name}" ya no está en el catálogo.`);
+    },
+    onError: (error: Error) => {
+      showErrorToast(
+        "No se pudo eliminar el servicio",
+        error.message || "Inténtalo de nuevo.",
+      );
     },
   });
 
@@ -325,6 +348,12 @@ export function EnterpriseSchedules() {
       setImagesModal(null);
       await queryClient.invalidateQueries({ queryKey: ["tenant-services", tenant.id] });
       await queryClient.invalidateQueries({ queryKey: ["tenant", tenant.slug] });
+      showSuccessToast("Galería guardada", "Las imágenes del servicio ya están actualizadas.");
+    } catch (error) {
+      showErrorToast(
+        "No se pudo guardar la galería",
+        error instanceof Error ? error.message : "Inténtalo de nuevo.",
+      );
     } finally {
       setGallerySaving(false);
     }
@@ -336,14 +365,18 @@ export function EnterpriseSchedules() {
     }
 
     const deletedId = serviceToDelete.id;
-    await deleteServiceMutation.mutateAsync(serviceToDelete);
-    setServiceToDelete(null);
+    try {
+      await deleteServiceMutation.mutateAsync(serviceToDelete);
+      setServiceToDelete(null);
 
-    if (editingServiceId === deletedId) {
-      clearPendingGallery();
-      setEditingServiceId(null);
-      setFormValues(EMPTY_SERVICE_FORM);
-      setServiceError(null);
+      if (editingServiceId === deletedId) {
+        clearPendingGallery();
+        setEditingServiceId(null);
+        setFormValues(EMPTY_SERVICE_FORM);
+        setServiceError(null);
+      }
+    } catch {
+      // El toast de error lo emite deleteServiceMutation.onError.
     }
   }
 
