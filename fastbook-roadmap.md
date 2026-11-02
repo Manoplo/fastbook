@@ -17,6 +17,8 @@ select slug, name, is_pro from public.tenants where slug = 'manoplo';
 
 Sustituye `'manoplo'` por el `slug` del tenant que quieras conmutar.
 
+> Estos `UPDATE` solo funcionan en **SQL Editor / MCP** (sin JWT) o con **service_role**. Un owner autenticado ya **no** puede cambiar `is_pro` vía API (trigger `tenants_enforce_platform_columns`).
+
 ## Visión
 
 Aplicación **multitenant** de reserva de citas, con plan **gratuito** y **features premium**.
@@ -174,7 +176,7 @@ Rama: `feat/dashboard-bookings`. Referencia Stitch: **Agenda y Citas (Dashboard 
 - [x] Libs: `tenant-branding(.utils|-storage|-fonts).ts` + tests
 - [x] Migración aplicada en proyecto remoto `ptgltexbfxjqmyozcavt` (`tenant_branding` / `20261027111633`): columnas + checks + bucket `tenant-branding` + 4 policies Storage
 - [x] Follow-up colores: `brand_surface` + `brand_on_surface` (fondo de cajas + tipografía), tokens `--fb-surface-*` / `--fb-on-surface` sobrescritos, `--fb-on-primary` derivado del primario (CTAs), preview alineado con booking. Migración remota `tenant_branding_surface_text`
-- [ ] Enforcement server-side de Pro para estas columnas (hoy solo UI + `resolvePublicBranding`)
+- [ ] Enforcement server-side de Pro para estas columnas (hoy solo UI + `resolvePublicBranding`; `is_pro` ya no es auto-escalable por API)
 
 ### Servicios opcionales ✅
 
@@ -187,18 +189,27 @@ Los tenants pueden operar **sin catálogo de servicios**. Si no hay servicios ac
 - [x] Edge Functions `send-booking-confirmation` / `send-booking-reminders` redeployadas con fallback `Cita con {tenant}`
 - [x] Types FE (`database.types.ts`) + tests (`booking-label.utils`, agenda)
 
+### Seguridad plataforma (is_pro) ✅
+
+- [x] Trigger `private.enforce_tenant_platform_columns` en `tenants` (BEFORE INSERT/UPDATE): bloquea cambios de `is_pro` / `owner_id` y `INSERT` con `is_pro = true` salvo JWT `service_role` o SQL sin JWT (Studio/MCP). Autoriza con `auth.role()` (no `current_user`: la función es SECURITY DEFINER).
+- [x] Migraciones aplicadas en remoto: `protect_tenant_platform_columns` (+ follow-ups de bypass/`auth.role`).
+- [x] Revocado `EXECUTE` de `public.rls_auto_enable()` a `anon` / `authenticated` (advisor).
+- [ ] **Siguiente riesgo alto:** límites Free solo en UI (máx. 2 servicios, galería, `youtube_url`, escritura branding). Enforcement server-side pendiente.
+- Docs: [`admin-panel.md`](admin-panel.md), [`admin-panel-handoff.md`](admin-panel-handoff.md) (SPA admin local, otro repo).
+
 ### Siguiente (prioridad)
 
-1. **Probar aviso al tenant + recordatorio Pro:** reserva → 2 mails (cliente + owner). Para D-1: cita Pro con inicio en ~23.5 h y forzar cron / curl a `send-booking-reminders` (secret en Vault).
-2. **Cutover DNS + Auth** (ver `docs/domain-split.md`): apuntar dominios, actualizar Supabase Auth y `APP_ORIGIN`.
-3. **Validar QR en dashboard del tenant** → check-in de la cita:
+1. **Enforcement server-side de plan Free** (máx. 2 servicios activos, `image_urls`/`youtube_url`/branding solo si `is_pro`) — hoy abusables vía API aunque la UI lo bloquee.
+2. **Probar aviso al tenant + recordatorio Pro:** reserva → 2 mails (cliente + owner). Para D-1: cita Pro con inicio en ~23.5 h y forzar cron / curl a `send-booking-reminders` (secret en Vault).
+3. **Cutover DNS + Auth** (ver `docs/domain-split.md`): apuntar dominios, actualizar Supabase Auth y `APP_ORIGIN`.
+4. **Validar QR en dashboard del tenant** → check-in de la cita:
    - Modelo BBDD: `checked_in_at` y/o ampliar `status` (`checked_in` / `completed` / `no_show`) — hoy UI deriva estados por hora; BBDD solo `confirmed` \| `cancelled`.
    - UI agenda “Validar QR”: cámara + input manual; ruta `/enterprise/:tenantSlug/check-in/:token` (ya codificada en el QR).
    - Update autenticado (owner) + feedback de la cita.
-4. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
-5. (Más adelante) Página `/pricing` + enforcement server-side de límites free; email de notificación configurable distinto del login; URLs “bonitas” `fastbook.es/:slug`.
+5. Reorder DnD de miniaturas / elegir portada explícita en dashboard.
+6. (Más adelante) Página `/pricing`; admin panel (repo aparte, localhost); email de notificación configurable; URLs “bonitas” `fastbook.es/:slug`.
 
-Detalle operativo: ver `handoff.md` y `docs/domain-split.md`.
+Detalle operativo: ver `handoff.md`, `docs/domain-split.md`, `admin-panel-handoff.md`.
 
 ## Esquema de datos (capa gratuita + auth)
 
@@ -291,6 +302,7 @@ erDiagram
 - Lectura pública: `tenants`, `services` activos, `tenant_availability`.
 - Insert público de `bookings` (policies de booking público; ver migraciones `20260928*`).
 - Owner autenticado: CRUD de services / `tenant_availability` / bookings de su tenant vía `is_tenant_owner`.
+- **Plataforma:** `is_pro` / `owner_id` no son mutables por JWT `authenticated`/`anon` (trigger); solo Studio sin JWT o `service_role`.
 
 ### SQL de referencia
 
@@ -309,6 +321,8 @@ erDiagram
 | [`20261027180000_booking_reminder_pro.sql`](supabase/migrations/20261027180000_booking_reminder_pro.sql) | `reminder_sent_at` + RPCs claim/release + auth cron (solo Pro) |
 | [`20261027180100_booking_reminder_cron.sql`](supabase/migrations/20261027180100_booking_reminder_cron.sql) | Vault secrets + `pg_cron` `*/15` → `send-booking-reminders` |
 | [`20261101000000_bookings_optional_service.sql`](supabase/migrations/20261101000000_bookings_optional_service.sql) | `service_id` nullable + policy insert + reminders sin servicio |
+| [`20261101170000_protect_tenant_platform_columns.sql`](supabase/migrations/20261101170000_protect_tenant_platform_columns.sql) | Trigger: proteger `is_pro` / `owner_id`; revoke `rls_auto_enable` |
+| [`20261101170300_fix_platform_columns_auth_role_only.sql`](supabase/migrations/20261101170300_fix_platform_columns_auth_role_only.sql) | Fix: autorizar con `auth.role()` (SECURITY DEFINER) |
 
 **Proyecto Supabase:** `fastbook` (`ptgltexbfxjqmyozcavt`, `eu-west-1`).
 
