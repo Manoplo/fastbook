@@ -1,17 +1,29 @@
 import { useEffect } from 'react'
 import { FastbookLogo } from '@components/fastbook-logo/fastbook-logo'
+import { ArrowOutwardIcon } from '@components/icons/arrow-outward-icon'
 import { CheckCircleIcon } from '@components/icons/check-circle-icon'
 import { loadBrandFont } from '@src/lib/tenant-branding-fonts'
 import { buildBrandingStyle } from '@src/lib/tenant-branding.utils'
+import {
+  normalizeWebsiteUrl,
+  websiteLinkLabel,
+} from '@src/lib/tenant-website-url.utils'
 import type { BrandPreviewProps } from './brand-preview.types'
 import './brand-preview.css'
 
 const SAMPLE_SLOTS = ['09:00', '09:30', '10:00', '10:30']
 
-export function BrandPreview({ tenantName, logoSrc, draft }: BrandPreviewProps) {
+export function BrandPreview({
+  tenantName,
+  logoSrc,
+  draft,
+  websiteUrl = '',
+}: BrandPreviewProps) {
   useEffect(() => {
     void loadBrandFont(draft.fontKey)
   }, [draft.fontKey])
+
+  const resolvedWebsite = normalizeWebsiteUrl(websiteUrl)
 
   return (
     <aside className="brand-preview" aria-label="Vista previa de tu página de reservas">
@@ -36,6 +48,18 @@ export function BrandPreview({ tenantName, logoSrc, draft }: BrandPreviewProps) 
 
         <div className="brand-preview__body">
           <h3 className="brand-preview__heading">Reserva tu cita en {tenantName}</h3>
+          {resolvedWebsite ? (
+            <a
+              className="brand-preview__site-link"
+              href={resolvedWebsite}
+              target="_blank"
+              rel="noopener noreferrer"
+              tabIndex={-1}
+            >
+              <span>{websiteLinkLabel(resolvedWebsite)}</span>
+              <ArrowOutwardIcon className="brand-preview__site-link-icon" />
+            </a>
+          ) : null}
           <p className="brand-preview__text">Elige día, hora y servicio para confirmar.</p>
 
           <ul className="brand-preview__slots" aria-label="Horas de ejemplo">

@@ -12,7 +12,17 @@ import {
   revokeLocalPreviewUrls,
   type ServiceImageItem,
 } from "@src/lib/service-images-storage.utils";
-import { listTenantAvailability, replaceTenantAvailability } from "@src/lib/tenant-availability";
+import {
+  listTenantAvailability,
+  replaceTenantAvailability,
+  updateTenantBookingWindow,
+} from "@src/lib/tenant-availability";
+import {
+  bookingWindowFromTenant,
+  bookingWindowToRowValues,
+  validateBookingWindowDraft,
+  type BookingWindowDraft,
+} from "@src/lib/tenant-booking-window.utils";
 import {
   createTenantService,
   deleteTenantService,
@@ -56,6 +66,12 @@ export function EnterpriseSchedules() {
   const queryClient = useQueryClient();
 
   const [days, setDays] = useState<DayScheduleDraft[]>(createEmptyWeekDraft);
+  const [bookingWindow, setBookingWindow] = useState<BookingWindowDraft>(() =>
+    bookingWindowFromTenant({
+      booking_opens_on: tenant.bookingOpensOn,
+      booking_closes_on: tenant.bookingClosesOn,
+    }),
+  );
   const [scheduleHydrated, setScheduleHydrated] = useState(false);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
 
@@ -99,12 +115,24 @@ export function EnterpriseSchedules() {
       if (validationError) {
         throw new Error(validationError.message);
       }
-      return replaceTenantAvailability(tenant.id, flattenWeekDraft(days));
+      const windowError = validateBookingWindowDraft(bookingWindow);
+      if (windowError) {
+        throw new Error(windowError);
+      }
+
+      const [rows, savedWindow] = await Promise.all([
+        replaceTenantAvailability(tenant.id, flattenWeekDraft(days)),
+        updateTenantBookingWindow(tenant.id, bookingWindowToRowValues(bookingWindow)),
+      ]);
+
+      return { rows, savedWindow };
     },
-    onSuccess: async (rows) => {
+    onSuccess: async ({ rows, savedWindow }) => {
       setScheduleError(null);
       setDays(buildWeekDraftFromRows(rows));
+      setBookingWindow(bookingWindowFromTenant(savedWindow));
       await queryClient.invalidateQueries({ queryKey: ["tenant-availability", tenant.id] });
+      await queryClient.invalidateQueries({ queryKey: ["owned-tenant"] });
       await queryClient.invalidateQueries({ queryKey: ["tenant", tenant.slug] });
     },
     onError: (error: Error) => {
@@ -350,10 +378,15 @@ export function EnterpriseSchedules() {
       <div className="enterprise-schedules__grid">
         <WeeklyScheduleEditor
           days={days}
+          bookingWindow={bookingWindow}
           isSaving={saveScheduleMutation.isPending}
           errorMessage={scheduleError}
           onChange={(next) => {
             setDays(next);
+            setScheduleError(null);
+          }}
+          onBookingWindowChange={(patch) => {
+            setBookingWindow((current) => ({ ...current, ...patch }));
             setScheduleError(null);
           }}
           onCopyWeekdays={() => {

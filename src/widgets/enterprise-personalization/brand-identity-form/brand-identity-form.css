@@ -318,6 +318,25 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--fb-primary) 15%, transparent);
 }
 
+.brand-identity-form__text-input {
+  width: 100%;
+  min-height: 2.4rem;
+  margin-top: 0.35rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.55rem;
+  border: 1px solid var(--fb-outline-variant);
+  background: var(--fb-surface-container-low);
+  color: var(--fb-on-surface);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.brand-identity-form__text-input:focus {
+  outline: none;
+  border-color: var(--fb-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fb-primary) 15%, transparent);
+}
+
 .brand-identity-form__warning {
   margin: 0;
   padding: 0.5rem 0.65rem;

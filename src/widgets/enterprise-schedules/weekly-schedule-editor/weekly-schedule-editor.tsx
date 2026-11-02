@@ -13,9 +13,11 @@ import './weekly-schedule-editor.css'
 
 export function WeeklyScheduleEditor({
   days,
+  bookingWindow,
   isSaving,
   errorMessage,
   onChange,
+  onBookingWindowChange,
   onSave,
   onCopyWeekdays,
 }: WeeklyScheduleEditorProps) {
@@ -83,6 +85,41 @@ export function WeeklyScheduleEditor({
           Copiar L–V a todos
         </button>
       </header>
+
+      <div className="weekly-schedule-editor__window">
+        <div className="weekly-schedule-editor__window-copy">
+          <h3 className="weekly-schedule-editor__window-title">Periodo de reservas</h3>
+          <p className="weekly-schedule-editor__window-subtitle">
+            Limita desde qué día y hasta qué día pueden pedirte cita. Déjalo vacío para no
+            restringir (desde hoy, ~90 días).
+          </p>
+        </div>
+        <div className="weekly-schedule-editor__window-fields">
+          <label className="weekly-schedule-editor__date-field">
+            <span>Desde</span>
+            <input
+              type="date"
+              value={bookingWindow.opensOn}
+              disabled={isSaving}
+              onChange={(event) => {
+                onBookingWindowChange({ opensOn: event.target.value })
+              }}
+            />
+          </label>
+          <label className="weekly-schedule-editor__date-field">
+            <span>Hasta</span>
+            <input
+              type="date"
+              value={bookingWindow.closesOn}
+              min={bookingWindow.opensOn || undefined}
+              disabled={isSaving}
+              onChange={(event) => {
+                onBookingWindowChange({ closesOn: event.target.value })
+              }}
+            />
+          </label>
+        </div>
+      </div>
 
       <ul className="weekly-schedule-editor__days">
         {days.map((day) => (

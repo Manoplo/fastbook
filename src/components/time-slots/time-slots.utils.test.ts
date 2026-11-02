@@ -98,4 +98,16 @@ describe('buildAvailableDates', () => {
 
     expect(dates.map((date) => date.getDay())).toEqual([1, 6])
   })
+
+  it('respeta to inclusive', () => {
+    const from = new Date(2026, 8, 28)
+    const to = new Date(2026, 8, 28)
+    const dates = buildAvailableDates({
+      windows: VANESA_WINDOWS,
+      from,
+      to,
+    })
+    expect(dates).toHaveLength(1)
+    expect(dates[0].getDay()).toBe(1)
+  })
 })

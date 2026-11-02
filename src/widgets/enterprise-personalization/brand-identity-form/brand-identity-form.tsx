@@ -65,6 +65,7 @@ export function BrandIdentityForm({
   isPro,
   logo,
   draft,
+  websiteUrl,
   isDirty,
   isSaving,
   errorMessage,
@@ -72,6 +73,7 @@ export function BrandIdentityForm({
   onLogoSelect,
   onLogoRemove,
   onDraftChange,
+  onWebsiteUrlChange,
   onReset,
   onSave,
   onRequestUpgrade,
@@ -305,6 +307,27 @@ export function BrandIdentityForm({
             </label>
           ))}
         </div>
+      </fieldset>
+
+      <fieldset className="brand-identity-form__section" disabled={locked || isSaving}>
+        <legend className="brand-identity-form__legend">Sitio web</legend>
+        <label className="brand-identity-form__label" htmlFor="brand-website-url">
+          URL de tu web
+        </label>
+        <input
+          id="brand-website-url"
+          type="url"
+          className="brand-identity-form__text-input"
+          placeholder="https://tu-negocio.com"
+          value={websiteUrl}
+          spellCheck={false}
+          onChange={(event) => {
+            onWebsiteUrlChange(event.target.value)
+          }}
+        />
+        <p className="brand-identity-form__hint brand-identity-form__hint--inline">
+          Aparece junto al título de tu página de reservas, con un enlace externo.
+        </p>
       </fieldset>
 
       <footer className="brand-identity-form__footer">

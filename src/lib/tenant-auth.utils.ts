@@ -96,6 +96,7 @@ export type AuthErrorCode =
   | 'email_not_confirmed'
   | 'no_tenant'
   | 'needs_business_setup'
+  | 'account_banned'
   | 'unknown'
 
 /**
@@ -157,6 +158,8 @@ export function authErrorMessage(code: AuthErrorCode): string {
       return 'Tu cuenta no tiene un negocio asociado.'
     case 'needs_business_setup':
       return 'Completa los datos de tu negocio para continuar.'
+    case 'account_banned':
+      return 'Tu cuenta ha sido desactivada. Contacta con soporte.'
     default:
       return 'No se pudo completar la operación. Inténtalo de nuevo.'
   }

@@ -197,9 +197,16 @@ Los tenants pueden operar **sin catálogo de servicios**. Si no hay servicios ac
 - [ ] **Siguiente riesgo alto:** límites Free solo en UI (máx. 2 servicios, galería, `youtube_url`, escritura branding). Enforcement server-side pendiente.
 - Docs: [`admin-panel.md`](admin-panel.md), [`admin-panel-handoff.md`](admin-panel-handoff.md) (SPA admin local, otro repo).
 
+### Ventana de reservas + web Pro ✅
+
+- [x] Migración remota `tenant_booking_window_and_website_url`: `tenants.booking_opens_on`, `booking_closes_on`, `website_url` (+ checks).
+- [x] Horarios (`/schedules`): UI “Periodo de reservas” (desde/hasta); se guarda junto a los tramos semanales.
+- [x] Página pública: calendario respeta min/max; link al sitio (solo Pro) bajo “Reserva tu cita en…”, tipografía más pequeña, color claro → oscuro + flecha NE con hover.
+- [x] Personalización Pro: campo URL + preview.
+
 ### Siguiente (prioridad)
 
-1. **Enforcement server-side de plan Free** (máx. 2 servicios activos, `image_urls`/`youtube_url`/branding solo si `is_pro`) — hoy abusables vía API aunque la UI lo bloquee.
+1. **Enforcement server-side de plan Free** (máx. 2 servicios activos, `image_urls`/`youtube_url`/branding/`website_url` solo si `is_pro`) — hoy abusables vía API aunque la UI lo bloquee.
 2. **Probar aviso al tenant + recordatorio Pro:** reserva → 2 mails (cliente + owner). Para D-1: cita Pro con inicio en ~23.5 h y forzar cron / curl a `send-booking-reminders` (secret en Vault).
 3. **Cutover DNS + Auth** (ver `docs/domain-split.md`): apuntar dominios, actualizar Supabase Auth y `APP_ORIGIN`.
 4. **Validar QR en dashboard del tenant** → check-in de la cita:
@@ -229,6 +236,9 @@ erDiagram
     text name
     text booking_note
     boolean is_pro
+    date booking_opens_on
+    date booking_closes_on
+    text website_url
     text logo_url
     text brand_primary
     text brand_secondary
@@ -284,7 +294,7 @@ erDiagram
 
 | Tabla | Qué es |
 |---|---|
-| `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `is_pro` (plan). `booking_note` antes de confirmar. Branding Pro: `logo_url`, `brand_primary`/`brand_secondary`, `brand_surface`/`brand_on_surface` (cajas + tipografía), `brand_font` (catálogo cerrado), `brand_logo_height` (24–64). |
+| `tenants` | Empresa/negocio. `slug` único → URL pública. `owner_id` → `auth.users`. `is_pro` (plan). `booking_note` antes de confirmar. Ventana pública: `booking_opens_on` / `booking_closes_on`. Pro: `website_url` + branding (`logo_url`, colores, `brand_font`, `brand_logo_height`). |
 | `services` | Catálogo **opcional** por tenant. `duration_minutes` calcula huecos; `active` oculta sin borrar. Free: máx. 2 (UI). Pro: `image_urls` (≤10) + `youtube_url`; `image_url` portada/legacy. Sin servicios activos → reserva genérica. |
 | `tenant_availability` | Ventanas semanales del negocio (`day_of_week` 0=dom…6=sáb + `start_time`/`end_time`). |
 | `bookings` | Reserva concreta. `service_id` nullable. Unique `(service_id, booking_date, start_time)` + índice parcial sin servicio `(tenant_id, booking_date, start_time)`. `check_in_token` opaco para QR. Status: `confirmed` \| `cancelled`. `reminder_sent_at` = recordatorio D-1 enviado (Pro). |
@@ -323,6 +333,7 @@ erDiagram
 | [`20261101000000_bookings_optional_service.sql`](supabase/migrations/20261101000000_bookings_optional_service.sql) | `service_id` nullable + policy insert + reminders sin servicio |
 | [`20261101170000_protect_tenant_platform_columns.sql`](supabase/migrations/20261101170000_protect_tenant_platform_columns.sql) | Trigger: proteger `is_pro` / `owner_id`; revoke `rls_auto_enable` |
 | [`20261101170300_fix_platform_columns_auth_role_only.sql`](supabase/migrations/20261101170300_fix_platform_columns_auth_role_only.sql) | Fix: autorizar con `auth.role()` (SECURITY DEFINER) |
+| [`20261102090000_tenant_booking_window_and_website_url.sql`](supabase/migrations/20261102090000_tenant_booking_window_and_website_url.sql) | `booking_opens_on` / `booking_closes_on` / `website_url` |
 
 **Proyecto Supabase:** `fastbook` (`ptgltexbfxjqmyozcavt`, `eu-west-1`).
 

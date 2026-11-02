@@ -19,13 +19,15 @@ export function Calendar({
   onChange,
   availableDates,
   minDate,
+  maxDate = null,
   eyebrow = 'Paso 1',
   title = 'Selecciona tu fecha',
 }: CalendarProps) {
   const [today] = useState(() => startOfDay(new Date()))
   const effectiveMinDate = minDate ? startOfDay(minDate) : today
+  const effectiveMaxDate = maxDate ? startOfDay(maxDate) : null
   const [viewMonth, setViewMonth] = useState(() =>
-    startOfDay(value ?? today),
+    startOfDay(value ?? effectiveMinDate),
   )
 
   const availableKeys = availableDates
@@ -37,6 +39,7 @@ export function Calendar({
     selected: value,
     today,
     minDate: effectiveMinDate,
+    maxDate: effectiveMaxDate,
     availableKeys,
   })
 
@@ -44,6 +47,12 @@ export function Calendar({
     viewMonth.getFullYear() > effectiveMinDate.getFullYear() ||
     (viewMonth.getFullYear() === effectiveMinDate.getFullYear() &&
       viewMonth.getMonth() > effectiveMinDate.getMonth())
+
+  const canGoNext =
+    !effectiveMaxDate ||
+    viewMonth.getFullYear() < effectiveMaxDate.getFullYear() ||
+    (viewMonth.getFullYear() === effectiveMaxDate.getFullYear() &&
+      viewMonth.getMonth() < effectiveMaxDate.getMonth())
 
   function handleSelect(dayDate: Date, selectable: boolean) {
     if (!selectable || !onChange) {
@@ -77,6 +86,7 @@ export function Calendar({
             type="button"
             className="calendar__nav-button"
             aria-label="Mes siguiente"
+            disabled={!canGoNext}
             onClick={() => setViewMonth((month) => addMonths(month, 1))}
           >
             <ChevronRightIcon className="calendar__nav-icon" />
