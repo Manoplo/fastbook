@@ -70,14 +70,17 @@ export function buildMonthGrid(options: {
   selected: Date | null
   today: Date
   minDate: Date
+  maxDate?: Date | null
   availableKeys: Set<string> | null
 }): CalendarDay[] {
-  const { viewMonth, selected, today, minDate, availableKeys } = options
+  const { viewMonth, selected, today, minDate, maxDate = null, availableKeys } = options
   const year = viewMonth.getFullYear()
   const month = viewMonth.getMonth()
   const firstOfMonth = new Date(year, month, 1)
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const startOffset = mondayBasedWeekday(firstOfMonth)
+  const min = startOfDay(minDate)
+  const max = maxDate ? startOfDay(maxDate) : null
 
   const cells: CalendarDay[] = []
   const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7
@@ -87,7 +90,7 @@ export function buildMonthGrid(options: {
     const date = new Date(year, month, dayOffset)
     const isCurrentMonth = date.getMonth() === month
     const dayStart = startOfDay(date)
-    const isPast = dayStart < startOfDay(minDate)
+    const isPast = dayStart < min || (max !== null && dayStart > max)
     const key = toDateKey(date)
     const isAvailable =
       isCurrentMonth && !isPast && (availableKeys === null || availableKeys.has(key))

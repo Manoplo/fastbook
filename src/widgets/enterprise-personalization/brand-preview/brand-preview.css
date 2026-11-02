@@ -74,6 +74,34 @@
   letter-spacing: -0.02em;
 }
 
+.brand-preview__site-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: fit-content;
+  margin-top: -0.25rem;
+  font-size: 0.78rem;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  color: color-mix(in srgb, var(--fb-on-surface) 45%, transparent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.brand-preview__site-link:hover {
+  color: var(--fb-on-surface);
+}
+
+.brand-preview__site-link-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  transition: transform 0.2s ease;
+}
+
+.brand-preview__site-link:hover .brand-preview__site-link-icon {
+  transform: translateX(3px);
+}
+
 .brand-preview__text {
   margin: 0;
   font-size: 0.82rem;

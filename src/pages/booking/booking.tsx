@@ -17,11 +17,17 @@ import {
   type CustomerDetailsFormValues,
 } from '@components/customer-details-form/customer-details-form.types'
 import { FastbookLogo } from '@components/fastbook-logo/fastbook-logo'
+import { ArrowOutwardIcon } from '@components/icons/arrow-outward-icon'
 import { ServiceList } from '@components/service-list/service-list'
 import { SiteFooter } from '@components/site-footer/site-footer'
 import { TimeSlots } from '@components/time-slots/time-slots'
 import { buildAvailableDates } from '@components/time-slots/time-slots.utils'
 import { bookingAppointmentLabel } from '@src/lib/booking-label.utils'
+import { resolveBookingRange } from '@src/lib/tenant-booking-window.utils'
+import {
+  resolvePublicWebsiteUrl,
+  websiteLinkLabel,
+} from '@src/lib/tenant-website-url.utils'
 import {
   BookingConflictError,
   createBooking,
@@ -176,10 +182,17 @@ export function BookingPage() {
     tenantName: tenant.name,
   })
   const appointmentPrice = selectedService ? Number(selectedService.price) : null
+  const bookingRange = resolveBookingRange({
+    today: startOfDay(new Date()),
+    opensOn: tenant.booking_opens_on,
+    closesOn: tenant.booking_closes_on,
+  })
   const availableDates = buildAvailableDates({
     windows,
-    from: startOfDay(new Date()),
+    from: bookingRange.from,
+    to: bookingRange.to,
   })
+  const websiteUrl = resolvePublicWebsiteUrl(tenant)
   const selectedDate = dateKey ? parseDateKey(dateKey) : null
   const selectionComplete = Boolean(
     dateKey && startTime && (!hasServices || selectedService),
@@ -260,6 +273,17 @@ export function BookingPage() {
             {step === 1 ? (
               <>
                 <h1 className="booking__title">Reserva tu cita en {tenant.name}</h1>
+                {websiteUrl ? (
+                  <a
+                    className="booking__site-link"
+                    href={websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span>{websiteLinkLabel(websiteUrl)}</span>
+                    <ArrowOutwardIcon className="booking__site-link-icon" />
+                  </a>
+                ) : null}
                 {tenant.booking_note ? (
                   <p className="booking__subtitle">{tenant.booking_note}</p>
                 ) : null}
@@ -305,6 +329,8 @@ export function BookingPage() {
                   value={selectedDate}
                   onChange={(date) => setDateKey(date ? toDateKey(date) : null)}
                   availableDates={availableDates}
+                  minDate={bookingRange.minDate}
+                  maxDate={bookingRange.maxDate}
                 />
                 <TimeSlots
                   date={selectedDate}
@@ -337,6 +363,8 @@ export function BookingPage() {
                   value={selectedDate}
                   onChange={(date) => setDateKey(date ? toDateKey(date) : null)}
                   availableDates={availableDates}
+                  minDate={bookingRange.minDate}
+                  maxDate={bookingRange.maxDate}
                 />
                 <TimeSlots
                   date={selectedDate}

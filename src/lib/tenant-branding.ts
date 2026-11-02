@@ -10,10 +10,11 @@ export type TenantBrandingRow = Pick<
   | 'brand_on_surface'
   | 'brand_font'
   | 'brand_logo_height'
+  | 'website_url'
 >
 
 const BRANDING_COLUMNS =
-  'logo_url, brand_primary, brand_secondary, brand_surface, brand_on_surface, brand_font, brand_logo_height'
+  'logo_url, brand_primary, brand_secondary, brand_surface, brand_on_surface, brand_font, brand_logo_height, website_url'
 
 export async function getTenantBranding(tenantId: string): Promise<TenantBrandingRow> {
   const { data, error } = await supabase

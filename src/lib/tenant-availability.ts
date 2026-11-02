@@ -10,6 +10,29 @@ export type TenantAvailabilityWindowInput = {
   endTime: string
 }
 
+export type TenantBookingWindowPatch = {
+  booking_opens_on: string | null
+  booking_closes_on: string | null
+}
+
+export async function updateTenantBookingWindow(
+  tenantId: string,
+  patch: TenantBookingWindowPatch,
+): Promise<TenantBookingWindowPatch> {
+  const { data, error } = await supabase
+    .from('tenants')
+    .update(patch)
+    .eq('id', tenantId)
+    .select('booking_opens_on, booking_closes_on')
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
 export async function listTenantAvailability(
   tenantId: string,
 ): Promise<TenantAvailabilityRow[]> {

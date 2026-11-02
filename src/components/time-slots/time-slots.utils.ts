@@ -74,24 +74,28 @@ export function buildSlotsForDay(options: {
   return slots
 }
 
-/** Fechas futuras (incl. hoy) con al menos una ventana semanal. */
+/** Fechas en [from, to] (inclusive) con al menos una ventana semanal. */
 export function buildAvailableDates(options: {
   windows: AvailabilityWindow[]
   from: Date
+  /** Inclusive. Si se omite, usa `daysAhead` desde `from`. */
+  to?: Date
   daysAhead?: number
 }): Date[] {
   const { windows, from, daysAhead = 90 } = options
   const openWeekdays = new Set(windows.map((window) => window.day_of_week))
   const dates: Date[] = []
+  const end = options.to
+    ? new Date(options.to.getFullYear(), options.to.getMonth(), options.to.getDate())
+    : new Date(from.getFullYear(), from.getMonth(), from.getDate() + daysAhead - 1)
 
-  for (let offset = 0; offset < daysAhead; offset++) {
-    const date = new Date(
-      from.getFullYear(),
-      from.getMonth(),
-      from.getDate() + offset,
-    )
+  for (
+    let date = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+    date <= end;
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+  ) {
     if (openWeekdays.has(date.getDay())) {
-      dates.push(date)
+      dates.push(new Date(date.getFullYear(), date.getMonth(), date.getDate()))
     }
   }
 

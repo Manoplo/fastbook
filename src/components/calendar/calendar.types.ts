@@ -14,6 +14,8 @@ export type CalendarProps = {
   /** Fechas con disponibilidad (sin hora). Si se omite, todos los días futuros del mes son disponibles. */
   availableDates?: Date[]
   minDate?: Date
+  /** Última fecha seleccionable (inclusive). */
+  maxDate?: Date | null
   eyebrow?: string
   title?: string
 }

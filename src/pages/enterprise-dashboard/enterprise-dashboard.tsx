@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FastbookLogo } from '@components/fastbook-logo/fastbook-logo'
@@ -22,6 +23,12 @@ export function EnterpriseDashboardPage() {
     queryFn: () => getTenantByOwner(userId!),
     enabled: Boolean(userId),
   })
+
+  useEffect(() => {
+    if (tenantQuery.data?.banned_at) {
+      void signOut()
+    }
+  }, [tenantQuery.data?.banned_at])
 
   if (isSessionLoading || !userId || tenantQuery.isLoading) {
     return (
@@ -56,6 +63,18 @@ export function EnterpriseDashboardPage() {
     )
   }
 
+  if (tenant.banned_at) {
+    return (
+      <div className="enterprise-dashboard enterprise-dashboard--error">
+        <FastbookLogo />
+        <p>Tu cuenta ha sido desactivada. Contacta con soporte.</p>
+        <Link className="enterprise-dashboard__link" to="/enterprise/login">
+          Volver al login
+        </Link>
+      </div>
+    )
+  }
+
   if (tenantSlug && tenant.slug !== tenantSlug) {
     return <Navigate to={enterpriseDashboardPath(tenant.slug)} replace />
   }
@@ -71,6 +90,8 @@ export function EnterpriseDashboardPage() {
       slug: tenant.slug,
       name: tenant.name,
       isPro: tenant.is_pro,
+      bookingOpensOn: tenant.booking_opens_on,
+      bookingClosesOn: tenant.booking_closes_on,
     },
   }
 

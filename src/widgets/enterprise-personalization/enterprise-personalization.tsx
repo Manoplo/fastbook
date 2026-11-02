@@ -9,6 +9,7 @@ import {
   draftToRowValues,
   type BrandingDraft,
 } from '@src/lib/tenant-branding.utils'
+import { normalizeWebsiteUrl } from '@src/lib/tenant-website-url.utils'
 import { UpgradeProModal } from '@src/widgets/enterprise-schedules/upgrade-pro-modal/upgrade-pro-modal'
 import { BrandIdentityForm } from './brand-identity-form/brand-identity-form'
 import { BrandPreview } from './brand-preview/brand-preview'
@@ -40,6 +41,7 @@ export function EnterprisePersonalization() {
   })
 
   const [draft, setDraft] = useState<BrandingDraft | null>(null)
+  const [websiteUrl, setWebsiteUrl] = useState('')
   const [logo, setLogo] = useState<BrandLogoState>(null)
   const [hydrated, setHydrated] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -49,6 +51,7 @@ export function EnterprisePersonalization() {
   if (brandingQuery.data && !hydrated) {
     setHydrated(true)
     setDraft(draftFromTenant(brandingQuery.data))
+    setWebsiteUrl(brandingQuery.data.website_url ?? '')
     setLogo(logoStateFromUrl(brandingQuery.data.logo_url))
   }
 
@@ -77,8 +80,18 @@ export function EnterprisePersonalization() {
         })
       }
 
+      const trimmedWebsite = websiteUrl.trim()
+      let nextWebsiteUrl: string | null = null
+      if (trimmedWebsite) {
+        nextWebsiteUrl = normalizeWebsiteUrl(trimmedWebsite)
+        if (!nextWebsiteUrl) {
+          throw new Error('La URL del sitio no es válida. Usa un dominio como https://tu-web.com')
+        }
+      }
+
       const saved = await updateTenantBranding(tenant.id, {
         logo_url: nextLogoUrl,
+        website_url: nextWebsiteUrl,
         ...draftToRowValues(draft),
       })
 
@@ -92,6 +105,7 @@ export function EnterprisePersonalization() {
       setErrorMessage(null)
       setSuccessMessage('Personalización guardada. Ya está visible en tu página pública.')
       setLogo(logoStateFromUrl(saved.logo_url))
+      setWebsiteUrl(saved.website_url ?? '')
       queryClient.setQueryData(['tenant-branding', tenant.id], saved)
       await queryClient.invalidateQueries({ queryKey: ['tenant', tenant.slug] })
     },
@@ -155,8 +169,10 @@ export function EnterprisePersonalization() {
 
   const saved = brandingQuery.data
   const savedDraft = draftFromTenant(saved)
+  const savedWebsiteUrl = saved.website_url ?? ''
   const isDirty =
     JSON.stringify(draft) !== JSON.stringify(savedDraft) ||
+    websiteUrl.trim() !== savedWebsiteUrl.trim() ||
     (logo?.kind === 'local') ||
     (logo === null) !== (saved.logo_url === null)
   const logoSrc = logo ? (logo.kind === 'remote' ? logo.url : logo.previewUrl) : null
@@ -177,6 +193,7 @@ export function EnterprisePersonalization() {
           isPro={tenant.isPro}
           logo={logo}
           draft={draft}
+          websiteUrl={websiteUrl}
           isDirty={isDirty}
           isSaving={saveMutation.isPending}
           errorMessage={errorMessage}
@@ -192,6 +209,10 @@ export function EnterprisePersonalization() {
             setDraft({ ...draft, ...patch })
             setSuccessMessage(null)
           }}
+          onWebsiteUrlChange={(value) => {
+            setWebsiteUrl(value)
+            setSuccessMessage(null)
+          }}
           onReset={() => {
             setDraft(
               draftFromTenant({
@@ -203,6 +224,7 @@ export function EnterprisePersonalization() {
                 brand_logo_height: null,
               }),
             )
+            setWebsiteUrl('')
             setLogo(null)
             setSuccessMessage(null)
           }}
@@ -214,7 +236,12 @@ export function EnterprisePersonalization() {
           }}
         />
 
-        <BrandPreview tenantName={tenant.name} logoSrc={logoSrc} draft={draft} />
+        <BrandPreview
+          tenantName={tenant.name}
+          logoSrc={logoSrc}
+          draft={draft}
+          websiteUrl={websiteUrl}
+        />
       </div>
 
       <UpgradeProModal

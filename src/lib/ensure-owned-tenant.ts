@@ -45,7 +45,9 @@ export async function createOwnedTenant(input: {
       slug,
       owner_id: input.ownerId,
     })
-    .select('id, slug, name, booking_note, owner_id, is_pro')
+    .select(
+      'id, slug, name, booking_note, owner_id, is_pro, banned_at, banned_reason, booking_opens_on, booking_closes_on',
+    )
     .single()
 
   if (error) {

@@ -3,6 +3,8 @@ export type EnterpriseDashboardTenant = {
   slug: string
   name: string
   isPro: boolean
+  bookingOpensOn: string | null
+  bookingClosesOn: string | null
 }
 
 export type EnterpriseDashboardOutletContext = {

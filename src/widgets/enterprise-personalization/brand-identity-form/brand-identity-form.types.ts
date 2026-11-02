@@ -5,6 +5,7 @@ export type BrandIdentityFormProps = {
   isPro: boolean
   logo: BrandLogoState
   draft: BrandingDraft
+  websiteUrl: string
   isDirty: boolean
   isSaving: boolean
   errorMessage: string | null
@@ -12,6 +13,7 @@ export type BrandIdentityFormProps = {
   onLogoSelect: (file: File) => void
   onLogoRemove: () => void
   onDraftChange: (patch: Partial<BrandingDraft>) => void
+  onWebsiteUrlChange: (value: string) => void
   onReset: () => void
   onSave: () => void
   onRequestUpgrade: () => void

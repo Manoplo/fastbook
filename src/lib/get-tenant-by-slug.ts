@@ -16,6 +16,7 @@ export type TenantWithServices = Pick<
   | "name"
   | "booking_note"
   | "is_pro"
+  | "banned_at"
   | "logo_url"
   | "brand_primary"
   | "brand_secondary"
@@ -23,6 +24,9 @@ export type TenantWithServices = Pick<
   | "brand_on_surface"
   | "brand_font"
   | "brand_logo_height"
+  | "booking_opens_on"
+  | "booking_closes_on"
+  | "website_url"
 > & {
   services: TenantService[];
   tenant_availability: TenantAvailabilityWindow[];
@@ -38,6 +42,7 @@ export async function getTenantBySlug(slug: string): Promise<TenantWithServices 
       name,
       booking_note,
       is_pro,
+      banned_at,
       logo_url,
       brand_primary,
       brand_secondary,
@@ -45,6 +50,9 @@ export async function getTenantBySlug(slug: string): Promise<TenantWithServices 
       brand_on_surface,
       brand_font,
       brand_logo_height,
+      booking_opens_on,
+      booking_closes_on,
+      website_url,
       tenant_availability (
         day_of_week,
         start_time,
@@ -71,6 +79,10 @@ export async function getTenantBySlug(slug: string): Promise<TenantWithServices 
   }
 
   if (!data) {
+    return null;
+  }
+
+  if (data.banned_at) {
     return null;
   }
 

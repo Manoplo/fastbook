@@ -167,7 +167,11 @@ export type Database = {
       }
       tenants: {
         Row: {
+          banned_at: string | null
+          banned_reason: string | null
+          booking_closes_on: string | null
           booking_note: string | null
+          booking_opens_on: string | null
           brand_font: string | null
           brand_logo_height: number | null
           brand_on_surface: string | null
@@ -181,9 +185,14 @@ export type Database = {
           name: string
           owner_id: string | null
           slug: string
+          website_url: string | null
         }
         Insert: {
+          banned_at?: string | null
+          banned_reason?: string | null
+          booking_closes_on?: string | null
           booking_note?: string | null
+          booking_opens_on?: string | null
           brand_font?: string | null
           brand_logo_height?: number | null
           brand_on_surface?: string | null
@@ -197,9 +206,14 @@ export type Database = {
           name: string
           owner_id?: string | null
           slug: string
+          website_url?: string | null
         }
         Update: {
+          banned_at?: string | null
+          banned_reason?: string | null
+          booking_closes_on?: string | null
           booking_note?: string | null
+          booking_opens_on?: string | null
           brand_font?: string | null
           brand_logo_height?: number | null
           brand_on_surface?: string | null
@@ -213,6 +227,7 @@ export type Database = {
           name?: string
           owner_id?: string | null
           slug?: string
+          website_url?: string | null
         }
         Relationships: []
       }

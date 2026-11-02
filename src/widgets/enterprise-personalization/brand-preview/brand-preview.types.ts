@@ -4,4 +4,5 @@ export type BrandPreviewProps = {
   tenantName: string
   logoSrc: string | null
   draft: BrandingDraft
+  websiteUrl?: string
 }

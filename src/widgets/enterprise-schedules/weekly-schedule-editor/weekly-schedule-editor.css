@@ -46,6 +46,67 @@
   white-space: nowrap;
 }
 
+.weekly-schedule-editor__window {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0.95rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--fb-outline-variant) 80%, white);
+  background: var(--fb-surface-container-low);
+}
+
+.weekly-schedule-editor__window-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fb-on-surface);
+}
+
+.weekly-schedule-editor__window-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--fb-on-surface-variant);
+}
+
+.weekly-schedule-editor__window-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.weekly-schedule-editor__date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 10.5rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fb-on-surface-variant);
+}
+
+.weekly-schedule-editor__date-field input {
+  border: 1px solid var(--fb-outline-variant);
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.65rem;
+  background: var(--fb-surface-container-lowest);
+  color: var(--fb-on-surface);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 550;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.weekly-schedule-editor__date-field input:focus {
+  outline: 2px solid color-mix(in srgb, var(--fb-primary) 45%, white);
+  outline-offset: 1px;
+}
+
 .weekly-schedule-editor__copy:hover {
   border-color: color-mix(in srgb, var(--fb-primary) 35%, white);
   color: var(--fb-primary);

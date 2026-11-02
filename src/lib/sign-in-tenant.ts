@@ -44,5 +44,11 @@ export async function signInTenant(
   }
 
   const tenant = await ensureOwnedTenant({ user })
+
+  if (tenant.banned_at) {
+    await supabase.auth.signOut()
+    throw new TenantAuthError('account_banned')
+  }
+
   return { tenant }
 }
