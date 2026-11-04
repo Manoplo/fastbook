@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import classNames from 'classnames'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useParams } from 'react-router-dom'
+import { Skeleton } from 'skullet/react'
 import { useShallow } from 'zustand/react/shallow'
 import { BookingConfirmation } from '@components/booking-confirmation/booking-confirmation'
 import { BookingContinueBar } from '@components/booking-continue-bar/booking-continue-bar'
@@ -37,10 +38,12 @@ import {
   getTenantAvailabilityWindows,
   getTenantBySlug,
   resolveSlotDurationMinutes,
+  type TenantWithServices,
 } from '@src/lib/get-tenant-by-slug'
 import { loadBrandFont } from '@src/lib/tenant-branding-fonts'
 import { resolvePublicBranding } from '@src/lib/tenant-branding.utils'
 import { useBookingSelectionStore } from '@src/stores/booking-selection-store'
+import { SAMPLE_BOOKING_TENANT } from './booking.samples'
 import './booking.css'
 
 const CUSTOMER_FORM_ID = 'customer-details-form'
@@ -50,8 +53,25 @@ function parseDateKey(dateKey: string): Date {
   return startOfDay(new Date(year, month - 1, day))
 }
 
-export function BookingPage() {
-  const { tenantSlug = '' } = useParams<{ tenantSlug: string }>()
+function BookingStatusLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="booking">
+      <header className="booking__header">
+        <div className="booking__header-inner">
+          <FastbookLogo />
+        </div>
+      </header>
+      <main className="booking__main">{children}</main>
+      <SiteFooter />
+    </div>
+  )
+}
+
+type BookingPageContentProps = {
+  tenant: TenantWithServices
+}
+
+function BookingPageContent({ tenant }: BookingPageContentProps) {
   const {
     step,
     dateKey,
@@ -91,12 +111,6 @@ export function BookingPage() {
   const { isValid: isCustomerFormValid } = customerForm.formState
   const { reset: resetCustomerForm, handleSubmit } = customerForm
 
-  const { data, isPending, isError } = useQuery({
-    queryKey: ['tenant', tenantSlug],
-    queryFn: () => getTenantBySlug(tenantSlug),
-    enabled: Boolean(tenantSlug),
-  })
-
   const createBookingMutation = useMutation({
     mutationFn: createBooking,
   })
@@ -104,9 +118,9 @@ export function BookingPage() {
   useEffect(() => {
     resetSelection()
     resetCustomerForm(CUSTOMER_DETAILS_DEFAULT_VALUES)
-  }, [tenantSlug, resetSelection, resetCustomerForm])
+  }, [tenant.slug, resetSelection, resetCustomerForm])
 
-  const brandFontKey = data ? (resolvePublicBranding(data)?.draft.fontKey ?? null) : null
+  const brandFontKey = resolvePublicBranding(tenant)?.draft.fontKey ?? null
   useEffect(() => {
     if (brandFontKey) {
       void loadBrandFont(brandFontKey)
@@ -117,59 +131,6 @@ export function BookingPage() {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [step])
 
-  if (isPending) {
-    return (
-      <div className="booking">
-        <header className="booking__header">
-          <div className="booking__header-inner">
-            <FastbookLogo />
-          </div>
-        </header>
-        <main className="booking__main">
-          <p className="booking__status">Cargando…</p>
-        </main>
-        <SiteFooter />
-      </div>
-    )
-  }
-
-  if (isError) {
-    return (
-      <div className="booking">
-        <header className="booking__header">
-          <div className="booking__header-inner">
-            <FastbookLogo />
-          </div>
-        </header>
-        <main className="booking__main">
-          <p className="booking__status booking__status--error">
-            No se pudo cargar el negocio. Inténtalo de nuevo.
-          </p>
-        </main>
-        <SiteFooter />
-      </div>
-    )
-  }
-
-  if (!data) {
-    return (
-      <div className="booking">
-        <header className="booking__header">
-          <div className="booking__header-inner">
-            <FastbookLogo />
-          </div>
-        </header>
-        <main className="booking__main">
-          <p className="booking__status booking__status--error">
-            No encontramos un negocio con el enlace “{tenantSlug}”.
-          </p>
-        </main>
-        <SiteFooter />
-      </div>
-    )
-  }
-
-  const tenant = data
   const branding = resolvePublicBranding(tenant)
   const windows = getTenantAvailabilityWindows(tenant)
   const hasServices = tenant.services.length > 0
@@ -259,10 +220,14 @@ export function BookingPage() {
               className="booking__brand-logo"
               src={branding.logoUrl}
               alt={tenant.name}
+              width={160}
+              height={branding.logoHeight}
               style={{ height: `${branding.logoHeight}px` }}
             />
           ) : (
-            <FastbookLogo />
+            <span {...{ 'skullet-block': '' }}>
+              <FastbookLogo />
+            </span>
           )}
         </div>
       </header>
@@ -445,5 +410,46 @@ export function BookingPage() {
         />
       ) : null}
     </div>
+  )
+}
+
+export function BookingPage() {
+  const { tenantSlug = '' } = useParams<{ tenantSlug: string }>()
+
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['tenant', tenantSlug],
+    queryFn: () => getTenantBySlug(tenantSlug),
+    enabled: Boolean(tenantSlug),
+  })
+
+  if (isError) {
+    return (
+      <BookingStatusLayout>
+        <p className="booking__status booking__status--error">
+          No se pudo cargar el negocio. Inténtalo de nuevo.
+        </p>
+      </BookingStatusLayout>
+    )
+  }
+
+  if (!isPending && !data) {
+    return (
+      <BookingStatusLayout>
+        <p className="booking__status booking__status--error">
+          No encontramos un negocio con el enlace “{tenantSlug}”.
+        </p>
+      </BookingStatusLayout>
+    )
+  }
+
+  return (
+    <Skeleton
+      id={`booking-${tenantSlug}`}
+      data={isPending ? undefined : data!}
+      sample={SAMPLE_BOOKING_TENANT}
+      label="Cargando reserva"
+    >
+      {(tenant) => <BookingPageContent tenant={tenant} />}
+    </Skeleton>
   )
 }

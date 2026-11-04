@@ -2,6 +2,7 @@ import { useState } from 'react'
 import classNames from 'classnames'
 import { useQuery } from '@tanstack/react-query'
 import { useOutletContext } from 'react-router-dom'
+import { Skeleton } from 'skullet/react'
 import { AddIcon } from '@components/icons/add-icon'
 import { CalendarMonthIcon } from '@components/icons/calendar-month-icon'
 import { ChevronLeftIcon } from '@components/icons/chevron-left-icon'
@@ -12,6 +13,7 @@ import { listTenantAvailability } from '@src/lib/tenant-availability'
 import { listTenantBookingsInRange } from '@src/lib/tenant-bookings'
 import type { EnterpriseDashboardOutletContext } from '@src/pages/enterprise-dashboard/enterprise-dashboard.types'
 import { AgendaBookingCard } from './agenda-booking-card/agenda-booking-card'
+import { SAMPLE_AGENDA_BOOKINGS } from './enterprise-agenda.samples'
 import type { AgendaStatusFilter } from './enterprise-agenda.types'
 import {
   AGENDA_STATUS_FILTERS,
@@ -278,36 +280,48 @@ export function EnterpriseAgenda() {
             </p>
           </header>
 
-          {bookingsQuery.isLoading ? (
-            <div className="enterprise-agenda__empty">
-              <p className="enterprise-agenda__empty-title">Cargando citas…</p>
-            </div>
-          ) : bookingsQuery.isError ? (
+          {bookingsQuery.isError ? (
             <div className="enterprise-agenda__empty">
               <p className="enterprise-agenda__empty-title">No se pudieron cargar las citas</p>
               <p className="enterprise-agenda__empty-text">
                 Revisa la conexión e inténtalo de nuevo.
               </p>
             </div>
-          ) : filteredBookings.length === 0 ? (
-            <div className="enterprise-agenda__empty">
-              <p className="enterprise-agenda__empty-title">No hay citas para este día</p>
-              <p className="enterprise-agenda__empty-text">
-                Cuando lleguen reservas desde tu página pública, aparecerán aquí en la línea
-                temporal.
-                {search.trim() || statusFilter !== 'all'
-                  ? ' Prueba a limpiar la búsqueda o el filtro si esperabas resultados.'
-                  : null}
-              </p>
-            </div>
           ) : (
-            <ul className="enterprise-agenda__booking-list">
-              {filteredBookings.map((booking) => (
-                <li key={booking.id}>
-                  <AgendaBookingCard booking={booking} />
-                </li>
-              ))}
-            </ul>
+            <Skeleton
+              id={`agenda-timeline-${tenant.id}`}
+              loading={bookingsQuery.isLoading}
+              label="Cargando citas"
+            >
+              {bookingsQuery.isLoading ? (
+                <ul className="enterprise-agenda__booking-list">
+                  {SAMPLE_AGENDA_BOOKINGS.map((booking) => (
+                    <li key={booking.id}>
+                      <AgendaBookingCard booking={toAgendaBookingCard(booking, now, tenant.name)} />
+                    </li>
+                  ))}
+                </ul>
+              ) : filteredBookings.length === 0 ? (
+                <div className="enterprise-agenda__empty">
+                  <p className="enterprise-agenda__empty-title">No hay citas para este día</p>
+                  <p className="enterprise-agenda__empty-text">
+                    Cuando lleguen reservas desde tu página pública, aparecerán aquí en la línea
+                    temporal.
+                    {search.trim() || statusFilter !== 'all'
+                      ? ' Prueba a limpiar la búsqueda o el filtro si esperabas resultados.'
+                      : null}
+                  </p>
+                </div>
+              ) : (
+                <ul className="enterprise-agenda__booking-list">
+                  {filteredBookings.map((booking) => (
+                    <li key={booking.id}>
+                      <AgendaBookingCard booking={booking} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Skeleton>
           )}
         </section>
       </div>

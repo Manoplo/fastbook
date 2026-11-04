@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import classNames from "classnames";
+import { Skeleton } from "skullet/react";
 import { FastbookLogo } from "@components/fastbook-logo/fastbook-logo";
 import { ProgressSpinnerIcon } from "@components/icons/progress-spinner-icon";
 import { VisibilityIcon } from "@components/icons/visibility-icon";
@@ -159,29 +160,12 @@ export function EnterpriseLoginPage() {
   const isResolvingOwnedTenant = Boolean(userId) && ownedTenantQuery.isPending;
   const showAuthBootstrap = isSessionLoading || isResolvingOwnedTenant;
 
-  if (showAuthBootstrap) {
-    return (
-      <div className="enterprise-login">
-        <section className="enterprise-login__form-panel">
-          <div className="enterprise-login__form-inner enterprise-login__form-inner--bootstrap">
-            <Link to="/" className="enterprise-login__brand" aria-label="Inicio">
-              <FastbookLogo />
-            </Link>
-            <p className="enterprise-login__bootstrap" role="status" aria-live="polite">
-              <ProgressSpinnerIcon className="enterprise-login__submit-spinner" />
-              <span>Preparando tu acceso…</span>
-            </p>
-          </div>
-        </section>
-      </div>
-    );
-  }
-
   return (
+    <Skeleton id="enterprise-login" loading={showAuthBootstrap} label="Preparando tu acceso">
     <div className="enterprise-login">
       <section className="enterprise-login__form-panel">
         <div className="enterprise-login__form-inner">
-          <Link to="/" className="enterprise-login__brand" aria-label="Inicio">
+          <Link to="/" className="enterprise-login__brand" aria-label="Inicio" {...{ "skullet-block": "" }}>
             <FastbookLogo />
           </Link>
 
@@ -435,5 +419,6 @@ export function EnterpriseLoginPage() {
         </div>
       </aside>
     </div>
+    </Skeleton>
   );
 }

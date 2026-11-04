@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { Skeleton } from "skullet/react";
 import { showErrorToast, showSuccessToast } from "@components/app-toaster/show-app-toast";
 import { ConfirmModal } from "@components/confirm-modal/confirm-modal";
 import type { EnterpriseDashboardOutletContext } from "@src/pages/enterprise-dashboard/enterprise-dashboard.types";
@@ -36,6 +37,10 @@ import type { ServiceGallerySavePayload } from "./service-images-modal/service-i
 import { ServicesCatalog } from "./services-catalog/services-catalog";
 import { UpgradeProModal } from "./upgrade-pro-modal/upgrade-pro-modal";
 import { WeeklyScheduleEditor } from "./weekly-schedule-editor/weekly-schedule-editor";
+import {
+  SAMPLE_SCHEDULE_AVAILABILITY,
+  SAMPLE_SCHEDULE_SERVICES,
+} from "./enterprise-schedules.samples";
 import type { DayScheduleDraft, ServiceFormValues, UpgradeProReason } from "./enterprise-schedules.types";
 import {
   EMPTY_SERVICE_FORM,
@@ -382,15 +387,7 @@ export function EnterpriseSchedules() {
 
   const isLoading = availabilityQuery.isLoading || servicesQuery.isLoading;
 
-  if (isLoading) {
-    return (
-      <div className="enterprise-schedules enterprise-schedules--loading">
-        <p>Cargando horarios y servicios…</p>
-      </div>
-    );
-  }
-
-  if (availabilityQuery.isError || servicesQuery.isError) {
+  if (!isLoading && (availabilityQuery.isError || servicesQuery.isError)) {
     return (
       <div className="enterprise-schedules enterprise-schedules--error">
         <p>No se pudo cargar la configuración. Inténtalo de nuevo.</p>
@@ -398,106 +395,119 @@ export function EnterpriseSchedules() {
     );
   }
 
+  const displayDays = scheduleHydrated
+    ? days
+    : buildWeekDraftFromRows(SAMPLE_SCHEDULE_AVAILABILITY);
+  const displayServices = servicesQuery.data ?? SAMPLE_SCHEDULE_SERVICES;
+
   return (
-    <div className="enterprise-schedules">
-      <header className="enterprise-schedules__intro">
-        <p className="enterprise-schedules__eyebrow">Gestión operativa</p>
-        <h1 className="enterprise-schedules__heading">Configuración de disponibilidad y servicios</h1>
-        <p className="enterprise-schedules__lead">
-          Define los días activos, tramos horarios y catálogo de servicios de tu negocio.
-        </p>
-      </header>
+    <Skeleton
+      id={`schedules-${tenant.id}`}
+      loading={isLoading}
+      label="Cargando horarios y servicios"
+    >
+      <div className="enterprise-schedules">
+        <header className="enterprise-schedules__intro">
+          <p className="enterprise-schedules__eyebrow">Gestión operativa</p>
+          <h1 className="enterprise-schedules__heading">
+            Configuración de disponibilidad y servicios
+          </h1>
+          <p className="enterprise-schedules__lead">
+            Define los días activos, tramos horarios y catálogo de servicios de tu negocio.
+          </p>
+        </header>
 
-      <div className="enterprise-schedules__grid">
-        <WeeklyScheduleEditor
-          days={days}
-          bookingWindow={bookingWindow}
-          isSaving={saveScheduleMutation.isPending}
-          errorMessage={scheduleError}
-          onChange={(next) => {
-            setDays(next);
-            setScheduleError(null);
-          }}
-          onBookingWindowChange={(patch) => {
-            setBookingWindow((current) => ({ ...current, ...patch }));
-            setScheduleError(null);
-          }}
-          onCopyWeekdays={() => {
-            setDays(copyWeekdaysToAll(days));
-            setScheduleError(null);
-          }}
-          onSave={() => {
-            void saveScheduleMutation.mutateAsync();
-          }}
-        />
+        <div className="enterprise-schedules__grid">
+          <WeeklyScheduleEditor
+            days={displayDays}
+            bookingWindow={bookingWindow}
+            isSaving={saveScheduleMutation.isPending}
+            errorMessage={scheduleError}
+            onChange={(next) => {
+              setDays(next);
+              setScheduleError(null);
+            }}
+            onBookingWindowChange={(patch) => {
+              setBookingWindow((current) => ({ ...current, ...patch }));
+              setScheduleError(null);
+            }}
+            onCopyWeekdays={() => {
+              setDays(copyWeekdaysToAll(days));
+              setScheduleError(null);
+            }}
+            onSave={() => {
+              void saveScheduleMutation.mutateAsync();
+            }}
+          />
 
-        <ServicesCatalog
-          services={servicesQuery.data ?? []}
-          isPro={tenant.isPro}
-          isSaving={saveServiceMutation.isPending}
-          errorMessage={serviceError}
-          editingServiceId={editingServiceId}
-          formValues={formValues}
-          onFormChange={setFormValues}
-          onStartCreate={handleStartCreate}
-          onStartEdit={handleStartEdit}
-          onCancelEdit={handleCancelEdit}
-          onSubmit={() => {
-            void saveServiceMutation.mutateAsync();
-          }}
-          onDelete={handleDelete}
-          onRequestUpgrade={openUpgrade}
-          onOpenServiceImages={handleOpenServiceImages}
-        />
-      </div>
+          <ServicesCatalog
+            services={displayServices}
+            isPro={tenant.isPro}
+            isSaving={saveServiceMutation.isPending}
+            errorMessage={serviceError}
+            editingServiceId={editingServiceId}
+            formValues={formValues}
+            onFormChange={setFormValues}
+            onStartCreate={handleStartCreate}
+            onStartEdit={handleStartEdit}
+            onCancelEdit={handleCancelEdit}
+            onSubmit={() => {
+              void saveServiceMutation.mutateAsync();
+            }}
+            onDelete={handleDelete}
+            onRequestUpgrade={openUpgrade}
+            onOpenServiceImages={handleOpenServiceImages}
+          />
+        </div>
 
-      <UpgradeProModal
-        open={upgradeOpen}
-        reason={upgradeReason}
-        onClose={() => {
-          setUpgradeOpen(false);
-        }}
-      />
-
-      {imagesModal ? (
-        <ServiceImagesModal
-          key={`${imagesModal.serviceId ?? "new"}:${imagesModal.label}`}
-          open
-          serviceLabel={imagesModal.label}
-          initialItems={imagesModal.initialItems}
-          initialYoutubeUrl={imagesModal.initialYoutubeUrl}
-          isSaving={gallerySaving}
+        <UpgradeProModal
+          open={upgradeOpen}
+          reason={upgradeReason}
           onClose={() => {
-            if (!gallerySaving) {
-              setImagesModal(null);
+            setUpgradeOpen(false);
+          }}
+        />
+
+        {imagesModal ? (
+          <ServiceImagesModal
+            key={`${imagesModal.serviceId ?? "new"}:${imagesModal.label}`}
+            open
+            serviceLabel={imagesModal.label}
+            initialItems={imagesModal.initialItems}
+            initialYoutubeUrl={imagesModal.initialYoutubeUrl}
+            isSaving={gallerySaving}
+            onClose={() => {
+              if (!gallerySaving) {
+                setImagesModal(null);
+              }
+            }}
+            onSave={handleGallerySave}
+          />
+        ) : null}
+
+        <ConfirmModal
+          open={Boolean(serviceToDelete)}
+          title="Eliminar servicio"
+          description={
+            serviceToDelete
+              ? `¿Eliminar el servicio “${serviceToDelete.name}”? Esta acción no se puede deshacer.`
+              : ""
+          }
+          confirmLabel="Eliminar"
+          confirmingLabel="Eliminando…"
+          cancelLabel="Cancelar"
+          tone="danger"
+          isConfirming={deleteServiceMutation.isPending}
+          onCancel={() => {
+            if (!deleteServiceMutation.isPending) {
+              setServiceToDelete(null);
             }
           }}
-          onSave={handleGallerySave}
+          onConfirm={() => {
+            void handleConfirmDelete();
+          }}
         />
-      ) : null}
-
-      <ConfirmModal
-        open={Boolean(serviceToDelete)}
-        title="Eliminar servicio"
-        description={
-          serviceToDelete
-            ? `¿Eliminar el servicio “${serviceToDelete.name}”? Esta acción no se puede deshacer.`
-            : ""
-        }
-        confirmLabel="Eliminar"
-        confirmingLabel="Eliminando…"
-        cancelLabel="Cancelar"
-        tone="danger"
-        isConfirming={deleteServiceMutation.isPending}
-        onCancel={() => {
-          if (!deleteServiceMutation.isPending) {
-            setServiceToDelete(null);
-          }
-        }}
-        onConfirm={() => {
-          void handleConfirmDelete();
-        }}
-      />
-    </div>
+      </div>
+    </Skeleton>
   );
 }
