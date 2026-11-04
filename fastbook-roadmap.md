@@ -209,6 +209,15 @@ Los tenants pueden operar **sin catálogo de servicios**. Si no hay servicios ac
 - [x] Dependencia `sonner` + `AppToaster` headless (`components/app-toaster`) con estilos DS (`--fb-*`), barra timer 4 s y botón dismiss
 - [x] Feedback en acciones de guardado / borrado / modificación del tenant: horarios, servicios (crear/editar/borrar), galería y personalización de marca
 
+### Skeletons de carga (Skullet) ✅
+
+- [x] Dependencia `skullet` + `SkulletProvider` en `main.tsx` (`mode="light"`, `reveal="smart"`, shimmer alineado a `--fb-surface-container`)
+- [x] Samples tipados (`*.samples.ts`) para booking, shell dashboard, agenda, schedules y personalization
+- [x] Shell compartido `EnterpriseDashboardShell` + mismo `id="enterprise-shell"` en `RequireAuth` y dashboard (sin flash de texto «Cargando…»)
+- [x] Skeletons en: booking público `/:slug`, login bootstrap, agenda (timeline), schedules, personalization
+- [x] `forgetShapes()` en `signOut` (no filtrar layout del tenant anterior en el mismo dispositivo)
+- [ ] Smoke visual en navegador: login → dashboard, primera visita a `/:slug`, agenda/schedules/personalization (opcional `?skullet-debug`)
+
 ### Siguiente (prioridad)
 
 1. **Enforcement server-side de plan Free** (máx. 2 servicios activos, `image_urls`/`youtube_url`/branding/`website_url` solo si `is_pro`) — hoy abusables vía API aunque la UI lo bloquee.

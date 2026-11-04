@@ -1,4 +1,5 @@
 import type { Session, User } from '@supabase/supabase-js'
+import { forgetShapes } from 'skullet'
 import { supabase } from './supabase-client'
 
 export async function getAuthSession(): Promise<Session | null> {
@@ -22,6 +23,7 @@ export async function signOut(): Promise<void> {
   if (error) {
     throw error
   }
+  forgetShapes()
 }
 
 export function onAuthStateChange(

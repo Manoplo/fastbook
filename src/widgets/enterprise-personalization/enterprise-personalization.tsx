@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { Skeleton } from 'skullet/react'
 import { showErrorToast, showSuccessToast } from '@components/app-toaster/show-app-toast'
 import type { EnterpriseDashboardOutletContext } from '@src/pages/enterprise-dashboard/enterprise-dashboard.types'
 import { getTenantBranding, updateTenantBranding } from '@src/lib/tenant-branding'
@@ -14,6 +15,10 @@ import { normalizeWebsiteUrl } from '@src/lib/tenant-website-url.utils'
 import { UpgradeProModal } from '@src/widgets/enterprise-schedules/upgrade-pro-modal/upgrade-pro-modal'
 import { BrandIdentityForm } from './brand-identity-form/brand-identity-form'
 import { BrandPreview } from './brand-preview/brand-preview'
+import {
+  SAMPLE_BRANDING_DRAFT,
+  SAMPLE_BRANDING_ROW,
+} from './enterprise-personalization.samples'
 import type { BrandLogoState } from './enterprise-personalization.types'
 import {
   convertLogoToWebp,
@@ -140,15 +145,10 @@ export function EnterprisePersonalization() {
     }
   }
 
-  if (brandingQuery.isLoading || (brandingQuery.data && !draft)) {
-    return (
-      <div className="enterprise-personalization enterprise-personalization--loading">
-        <p>Cargando personalización…</p>
-      </div>
-    )
-  }
+  const isBrandingLoading =
+    brandingQuery.isLoading || Boolean(brandingQuery.data && !draft)
 
-  if (brandingQuery.isError || !brandingQuery.data || !draft) {
+  if (!isBrandingLoading && (brandingQuery.isError || !brandingQuery.data || !draft)) {
     return (
       <div className="enterprise-personalization enterprise-personalization--error">
         <p>No se pudo cargar la personalización. Inténtalo de nuevo.</p>
@@ -170,85 +170,100 @@ export function EnterprisePersonalization() {
     )
   }
 
+  const displayDraft = draft ?? SAMPLE_BRANDING_DRAFT
+  const displayWebsiteUrl = draft ? websiteUrl : (SAMPLE_BRANDING_ROW.website_url ?? '')
   const saved = brandingQuery.data
-  const savedDraft = draftFromTenant(saved)
-  const savedWebsiteUrl = saved.website_url ?? ''
-  const isDirty =
-    JSON.stringify(draft) !== JSON.stringify(savedDraft) ||
-    websiteUrl.trim() !== savedWebsiteUrl.trim() ||
-    (logo?.kind === 'local') ||
-    (logo === null) !== (saved.logo_url === null)
+  const savedDraft = saved ? draftFromTenant(saved) : SAMPLE_BRANDING_DRAFT
+  const savedWebsiteUrl = saved?.website_url ?? ''
+  const isDirty = Boolean(
+    draft &&
+      saved &&
+      (JSON.stringify(draft) !== JSON.stringify(savedDraft) ||
+        websiteUrl.trim() !== savedWebsiteUrl.trim() ||
+        logo?.kind === 'local' ||
+        (logo === null) !== (saved.logo_url === null)),
+  )
   const logoSrc = logo ? (logo.kind === 'remote' ? logo.url : logo.previewUrl) : null
 
   return (
-    <div className="enterprise-personalization">
-      <header className="enterprise-personalization__intro">
-        <p className="enterprise-personalization__eyebrow">Tu marca</p>
-        <h1 className="enterprise-personalization__heading">Personalización de tu página pública</h1>
-        <p className="enterprise-personalization__lead">
-          Sube tu logotipo, ajusta los colores corporativos y elige la tipografía de tu enlace de
-          reservas.
-        </p>
-      </header>
+    <Skeleton
+      id={`personalization-${tenant.id}`}
+      loading={isBrandingLoading}
+      label="Cargando personalización"
+    >
+      <div className="enterprise-personalization">
+        <header className="enterprise-personalization__intro">
+          <p className="enterprise-personalization__eyebrow">Tu marca</p>
+          <h1 className="enterprise-personalization__heading">
+            Personalización de tu página pública
+          </h1>
+          <p className="enterprise-personalization__lead">
+            Sube tu logotipo, ajusta los colores corporativos y elige la tipografía de tu enlace de
+            reservas.
+          </p>
+        </header>
 
-      <div className="enterprise-personalization__grid">
-        <BrandIdentityForm
-          isPro={tenant.isPro}
-          logo={logo}
-          draft={draft}
-          websiteUrl={websiteUrl}
-          isDirty={isDirty}
-          isSaving={saveMutation.isPending}
-          errorMessage={errorMessage}
-          onLogoSelect={(file) => {
-            void handleLogoSelect(file)
-          }}
-          onLogoRemove={() => {
-            setLogo(null)
-          }}
-          onDraftChange={(patch) => {
-            setDraft({ ...draft, ...patch })
-          }}
-          onWebsiteUrlChange={(value) => {
-            setWebsiteUrl(value)
-          }}
-          onReset={() => {
-            setDraft(
-              draftFromTenant({
-                brand_primary: null,
-                brand_secondary: null,
-                brand_surface: null,
-                brand_on_surface: null,
-                brand_font: null,
-                brand_logo_height: null,
-              }),
-            )
-            setWebsiteUrl('')
-            setLogo(null)
-          }}
-          onSave={() => {
-            void saveMutation.mutateAsync().catch(() => undefined)
-          }}
-          onRequestUpgrade={() => {
-            setUpgradeOpen(true)
-          }}
-        />
+        <div className="enterprise-personalization__grid">
+          <BrandIdentityForm
+            isPro={tenant.isPro}
+            logo={logo}
+            draft={displayDraft}
+            websiteUrl={displayWebsiteUrl}
+            isDirty={isDirty}
+            isSaving={saveMutation.isPending}
+            errorMessage={errorMessage}
+            onLogoSelect={(file) => {
+              void handleLogoSelect(file)
+            }}
+            onLogoRemove={() => {
+              setLogo(null)
+            }}
+            onDraftChange={(patch) => {
+              setDraft({ ...displayDraft, ...patch })
+            }}
+            onWebsiteUrlChange={(value) => {
+              setWebsiteUrl(value)
+            }}
+            onReset={() => {
+              setDraft(
+                draftFromTenant({
+                  brand_primary: null,
+                  brand_secondary: null,
+                  brand_surface: null,
+                  brand_on_surface: null,
+                  brand_font: null,
+                  brand_logo_height: null,
+                }),
+              )
+              setWebsiteUrl('')
+              setLogo(null)
+            }}
+            onSave={() => {
+              void saveMutation.mutateAsync().catch(() => undefined)
+            }}
+            onRequestUpgrade={() => {
+              setUpgradeOpen(true)
+            }}
+          />
 
-        <BrandPreview
-          tenantName={tenant.name}
-          logoSrc={logoSrc}
-          draft={draft}
-          websiteUrl={websiteUrl}
+          <div {...{ 'skullet-block': '' }}>
+            <BrandPreview
+              tenantName={tenant.name}
+              logoSrc={logoSrc}
+              draft={displayDraft}
+              websiteUrl={displayWebsiteUrl}
+            />
+          </div>
+        </div>
+
+        <UpgradeProModal
+          open={upgradeOpen}
+          reason="branding"
+          onClose={() => {
+            setUpgradeOpen(false)
+          }}
         />
       </div>
-
-      <UpgradeProModal
-        open={upgradeOpen}
-        reason="branding"
-        onClose={() => {
-          setUpgradeOpen(false)
-        }}
-      />
-    </div>
+    </Skeleton>
   )
 }
