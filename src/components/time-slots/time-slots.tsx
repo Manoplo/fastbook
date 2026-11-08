@@ -1,5 +1,9 @@
 import classNames from 'classnames'
 import { CheckIcon } from '@components/icons/check-icon'
+import {
+  isStartTimeOccupied,
+  occupiedStartTimeSet,
+} from '@src/lib/occupied-booking-slots.utils'
 import type { TimeSlotsProps } from './time-slots.types'
 import { buildSlotsForDay } from './time-slots.utils'
 import './time-slots.css'
@@ -10,6 +14,7 @@ export function TimeSlots({
   onChange,
   windows,
   durationMinutes,
+  occupiedStartTimes = [],
   eyebrow = 'Paso 2',
   title = '2. Franja horaria',
 }: TimeSlotsProps) {
@@ -20,15 +25,43 @@ export function TimeSlots({
         durationMinutes,
       })
     : []
+  const occupied = occupiedStartTimeSet(occupiedStartTimes)
 
   const morning = slots.filter((slot) => slot.period === 'morning')
   const afternoon = slots.filter((slot) => slot.period === 'afternoon')
 
   function handleSelect(startTime: string) {
-    if (!onChange) {
+    if (!onChange || isStartTimeOccupied(startTime, occupied)) {
       return
     }
     onChange(value === startTime ? null : startTime)
+  }
+
+  function renderSlot(slot: { startTime: string }) {
+    const selected = value === slot.startTime
+    const disabled = isStartTimeOccupied(slot.startTime, occupied)
+    return (
+      <button
+        key={slot.startTime}
+        type="button"
+        className={classNames('time-slots__slot', {
+          'time-slots__slot--selected': selected && !disabled,
+          'time-slots__slot--occupied': disabled,
+        })}
+        aria-pressed={selected && !disabled}
+        aria-disabled={disabled}
+        disabled={disabled}
+        title={disabled ? 'Horario no disponible' : undefined}
+        onClick={() => handleSelect(slot.startTime)}
+      >
+        {selected && !disabled ? (
+          <CheckIcon className="time-slots__check" />
+        ) : (
+          <span className="time-slots__slot-dot" aria-hidden="true" />
+        )}
+        <span>{slot.startTime}</span>
+      </button>
+    )
   }
 
   return (
@@ -54,27 +87,7 @@ export function TimeSlots({
             <div className="time-slots__period">
               <span className="time-slots__period-label">Mañana</span>
               <div className="time-slots__grid" role="group" aria-label="Horarios de mañana">
-                {morning.map((slot) => {
-                  const selected = value === slot.startTime
-                  return (
-                    <button
-                      key={slot.startTime}
-                      type="button"
-                      className={classNames('time-slots__slot', {
-                        'time-slots__slot--selected': selected,
-                      })}
-                      aria-pressed={selected}
-                      onClick={() => handleSelect(slot.startTime)}
-                    >
-                      {selected ? (
-                        <CheckIcon className="time-slots__check" />
-                      ) : (
-                        <span className="time-slots__slot-dot" aria-hidden="true" />
-                      )}
-                      <span>{slot.startTime}</span>
-                    </button>
-                  )
-                })}
+                {morning.map(renderSlot)}
               </div>
             </div>
           ) : null}
@@ -83,27 +96,7 @@ export function TimeSlots({
             <div className="time-slots__period">
               <span className="time-slots__period-label">Tarde</span>
               <div className="time-slots__grid" role="group" aria-label="Horarios de tarde">
-                {afternoon.map((slot) => {
-                  const selected = value === slot.startTime
-                  return (
-                    <button
-                      key={slot.startTime}
-                      type="button"
-                      className={classNames('time-slots__slot', {
-                        'time-slots__slot--selected': selected,
-                      })}
-                      aria-pressed={selected}
-                      onClick={() => handleSelect(slot.startTime)}
-                    >
-                      {selected ? (
-                        <CheckIcon className="time-slots__check" />
-                      ) : (
-                        <span className="time-slots__slot-dot" aria-hidden="true" />
-                      )}
-                      <span>{slot.startTime}</span>
-                    </button>
-                  )
-                })}
+                {afternoon.map(renderSlot)}
               </div>
             </div>
           ) : null}

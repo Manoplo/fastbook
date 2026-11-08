@@ -5,6 +5,7 @@ export type BookingConfirmationProps = {
   dateKey: string
   startTime: string
   customerEmail: string
+  bookingId: string
   checkInToken: string
   onNewBooking: () => void
 }

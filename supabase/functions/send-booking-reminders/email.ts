@@ -5,6 +5,7 @@ export type BookingReminderEmailInput = {
   dateLabel: string
   timeLabel: string
   checkInUrl: string
+  manageUrl: string
 }
 
 export type BookingReminderEmail = {
@@ -29,6 +30,9 @@ export function buildBookingReminderEmail(
     '',
     'Muestra el código QR adjunto el día de tu cita, o abre este enlace:',
     input.checkInUrl,
+    '',
+    '¿Necesitas cambiar o anular la cita?',
+    input.manageUrl,
     '',
     '— Fastbook',
   ].join('\n')
@@ -75,6 +79,11 @@ export function buildBookingReminderEmail(
                 <p style="margin:16px 0 0;font-size:13px;line-height:18px;color:#666;text-align:center;">
                   Si no ves la imagen, abre tu comprobante:<br />
                   <a href="${escapeHtml(input.checkInUrl)}" style="color:#0b57d0;word-break:break-all;">${escapeHtml(input.checkInUrl)}</a>
+                </p>
+                <p style="margin:20px 0 0;text-align:center;">
+                  <a href="${escapeHtml(input.manageUrl)}" style="display:inline-block;background:#0b57d0;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 20px;border-radius:8px;">
+                    Gestionar / cambiar / anular cita
+                  </a>
                 </p>
               </td>
             </tr>

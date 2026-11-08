@@ -12,6 +12,7 @@ import {
   formatBookingDateLabel,
   formatBookingTimeLabel,
   isAuthorized,
+  publicBookingManagePath,
   type BookingWebhookPayload,
 } from './utils.ts'
 
@@ -128,6 +129,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     tenant.slug,
     booking.check_in_token,
   )}`
+  const manageUrl = `${appOrigin}${publicBookingManagePath(tenant.slug, booking.id)}`
   const agendaUrl = `${appOrigin}${enterpriseAgendaPath(tenant.slug)}`
 
   let qrPngBase64: string
@@ -154,6 +156,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     dateLabel,
     timeLabel,
     checkInUrl,
+    manageUrl,
   })
 
   const customerSend = await sendResendEmail({

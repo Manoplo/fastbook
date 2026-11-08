@@ -3,6 +3,7 @@ import {
   bookingCheckInPath,
   extractBearerToken,
   formatBookingTimeLabel,
+  publicBookingManagePath,
 } from './utils.ts'
 import { buildBookingReminderEmail } from './email.ts'
 
@@ -11,6 +12,10 @@ Deno.test('bookingCheckInPath matches FE shape', () => {
     bookingCheckInPath('manoplo', 'abc'),
     '/enterprise/manoplo/check-in/abc',
   )
+})
+
+Deno.test('publicBookingManagePath matches FE shape', () => {
+  assertEquals(publicBookingManagePath('manoplo', 'booking-1'), '/manoplo/booking-1')
 })
 
 Deno.test('formatBookingTimeLabel trims seconds', () => {
@@ -37,9 +42,11 @@ Deno.test('buildBookingReminderEmail mentions tomorrow reminder', () => {
     dateLabel: 'miércoles, 28 de octubre de 2026',
     timeLabel: '10:30',
     checkInUrl: 'https://app.fastbook.es/enterprise/manoplo/check-in/tok',
+    manageUrl: 'https://app.fastbook.es/manoplo/booking-1',
   })
 
   assertEquals(email.subject.includes('Recordatorio'), true)
   assertEquals(email.text.includes('10:30'), true)
   assertEquals(email.html.includes('cid:booking-qr'), true)
+  assertEquals(email.html.includes('/manoplo/booking-1'), true)
 })

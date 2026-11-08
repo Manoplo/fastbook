@@ -15,6 +15,13 @@ export function enterpriseDashboardPath(
   return `/enterprise/${tenantSlug}/${section}`
 }
 
+export function enterpriseAgendaBookingPath(
+  tenantSlug: string,
+  bookingId: string,
+): string {
+  return `/enterprise/${encodeURIComponent(tenantSlug)}/agenda/${encodeURIComponent(bookingId)}`
+}
+
 export function isEnterpriseDashboardSection(
   value: string | undefined,
 ): value is EnterpriseDashboardSection {

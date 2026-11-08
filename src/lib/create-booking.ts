@@ -20,6 +20,7 @@ export type CreateBookingInput = {
 }
 
 export type CreateBookingResult = {
+  id: string
   checkInToken: string
 }
 
@@ -33,10 +34,12 @@ export {
 export async function createBooking(
   input: CreateBookingInput,
 ): Promise<CreateBookingResult> {
-  // Token en cliente: no hay SELECT público en bookings, así que insert().select() fallaría.
+  // id + token en cliente: no hay SELECT público en bookings, así que insert().select() fallaría.
+  const bookingId = crypto.randomUUID()
   const checkInToken = createCheckInToken()
 
   const { error } = await supabase.from('bookings').insert({
+    id: bookingId,
     tenant_id: input.tenantId,
     service_id: input.serviceId,
     booking_date: input.bookingDate,
@@ -68,5 +71,5 @@ export async function createBooking(
       }
     })
 
-  return { checkInToken }
+  return { id: bookingId, checkInToken }
 }

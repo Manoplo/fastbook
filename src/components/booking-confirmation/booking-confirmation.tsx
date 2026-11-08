@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { CheckCircleIcon } from '@components/icons/check-circle-icon'
 import {
@@ -5,6 +6,7 @@ import {
   formatSummaryTimeLabel,
 } from '@components/booking-summary-card/booking-summary-card.utils'
 import { buildBookingCheckInUrl } from '@src/lib/booking-check-in.utils'
+import { publicBookingManagePath } from '@src/lib/public-booking-manage.utils'
 import type { BookingConfirmationProps } from './booking-confirmation.types'
 import './booking-confirmation.css'
 
@@ -15,6 +17,7 @@ export function BookingConfirmation({
   dateKey,
   startTime,
   customerEmail,
+  bookingId,
   checkInToken,
   onNewBooking,
 }: BookingConfirmationProps) {
@@ -23,6 +26,7 @@ export function BookingConfirmation({
     tenantSlug,
     checkInToken,
   })
+  const managePath = publicBookingManagePath(tenantSlug, bookingId)
 
   return (
     <section className="booking-confirmation" aria-label="Reserva confirmada">
@@ -62,6 +66,13 @@ export function BookingConfirmation({
           <dd>{formatSummaryTimeLabel(startTime)}</dd>
         </div>
       </dl>
+
+      <p className="booking-confirmation__manage">
+        ¿Necesitas cambiar o anular la cita?{' '}
+        <Link className="booking-confirmation__manage-link" to={managePath}>
+          Gestionar reserva
+        </Link>
+      </p>
 
       <button type="button" className="booking-confirmation__button" onClick={onNewBooking}>
         Hacer otra reserva

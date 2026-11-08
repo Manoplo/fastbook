@@ -75,6 +75,14 @@ export function bookingCheckInPath(
   return `/enterprise/${encodeURIComponent(tenantSlug)}/check-in/${encodeURIComponent(checkInToken)}`
 }
 
+/** Misma forma que `publicBookingManagePath` en el FE. */
+export function publicBookingManagePath(
+  tenantSlug: string,
+  bookingId: string,
+): string {
+  return `/${encodeURIComponent(tenantSlug)}/${encodeURIComponent(bookingId)}`
+}
+
 /** Misma forma que `enterpriseDashboardPath(slug, 'agenda')` en el FE. */
 export function enterpriseAgendaPath(tenantSlug: string): string {
   return `/enterprise/${encodeURIComponent(tenantSlug)}/agenda`

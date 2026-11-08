@@ -6,6 +6,14 @@ export function bookingCheckInPath(
   return `/enterprise/${encodeURIComponent(tenantSlug)}/check-in/${encodeURIComponent(checkInToken)}`
 }
 
+/** Misma forma que `publicBookingManagePath` en el FE. */
+export function publicBookingManagePath(
+  tenantSlug: string,
+  bookingId: string,
+): string {
+  return `/${encodeURIComponent(tenantSlug)}/${encodeURIComponent(bookingId)}`
+}
+
 export function formatBookingDateLabel(dateKey: string): string {
   const [year, month, day] = dateKey.split('-').map(Number)
   if (!year || !month || !day) {
