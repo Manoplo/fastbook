@@ -40,6 +40,10 @@ import {
   resolveSlotDurationMinutes,
   type TenantWithServices,
 } from '@src/lib/get-tenant-by-slug'
+import {
+  listOccupiedBookingStarts,
+  occupiedStartsForDate,
+} from '@src/lib/occupied-booking-slots'
 import { loadBrandFont } from '@src/lib/tenant-branding-fonts'
 import { resolvePublicBranding } from '@src/lib/tenant-branding.utils'
 import { useBookingSelectionStore } from '@src/stores/booking-selection-store'
@@ -101,6 +105,7 @@ function BookingPageContent({ tenant }: BookingPageContentProps) {
   )
 
   const [confirmedEmail, setConfirmedEmail] = useState('')
+  const [confirmedBookingId, setConfirmedBookingId] = useState('')
   const [checkInToken, setCheckInToken] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -153,6 +158,31 @@ function BookingPageContent({ tenant }: BookingPageContentProps) {
     from: bookingRange.from,
     to: bookingRange.to,
   })
+  const fromDateKey = toDateKey(bookingRange.from)
+  const toDateKeyValue = toDateKey(bookingRange.to)
+  const { data: occupiedRows = [] } = useQuery({
+    queryKey: ['occupied-slots', tenant.id, fromDateKey, toDateKeyValue],
+    queryFn: () =>
+      listOccupiedBookingStarts({
+        tenantId: tenant.id,
+        fromDate: fromDateKey,
+        toDate: toDateKeyValue,
+      }),
+  })
+  const occupiedStartTimes = dateKey
+    ? occupiedStartsForDate(occupiedRows, dateKey)
+    : []
+
+  useEffect(() => {
+    if (!startTime || !dateKey) {
+      return
+    }
+    const occupied = occupiedStartsForDate(occupiedRows, dateKey)
+    if (occupied.some((slot) => slot.slice(0, 5) === startTime.slice(0, 5))) {
+      setStartTime(null)
+    }
+  }, [startTime, dateKey, occupiedRows, setStartTime])
+
   const websiteUrl = resolvePublicWebsiteUrl(tenant)
   const selectedDate = dateKey ? parseDateKey(dateKey) : null
   const selectionComplete = Boolean(
@@ -187,6 +217,7 @@ function BookingPageContent({ tenant }: BookingPageContentProps) {
         notes,
       })
       setConfirmedEmail(values.email.trim().toLowerCase())
+      setConfirmedBookingId(result.id)
       setCheckInToken(result.checkInToken)
       setStep(3)
     } catch (error) {
@@ -202,6 +233,7 @@ function BookingPageContent({ tenant }: BookingPageContentProps) {
     resetSelection()
     resetCustomerForm(CUSTOMER_DETAILS_DEFAULT_VALUES)
     setConfirmedEmail('')
+    setConfirmedBookingId('')
     setCheckInToken('')
     setSubmitError(null)
   }
@@ -303,6 +335,7 @@ function BookingPageContent({ tenant }: BookingPageContentProps) {
                   onChange={setStartTime}
                   windows={windows}
                   durationMinutes={durationMinutes}
+                  occupiedStartTimes={occupiedStartTimes}
                 />
               </section>
 
@@ -337,6 +370,7 @@ function BookingPageContent({ tenant }: BookingPageContentProps) {
                   onChange={setStartTime}
                   windows={windows}
                   durationMinutes={durationMinutes}
+                  occupiedStartTimes={occupiedStartTimes}
                 />
               </section>
 
@@ -383,6 +417,7 @@ function BookingPageContent({ tenant }: BookingPageContentProps) {
         dateKey &&
         startTime &&
         checkInToken &&
+        confirmedBookingId &&
         (!hasServices || selectedService) ? (
           <BookingConfirmation
             tenantName={tenant.name}
@@ -391,6 +426,7 @@ function BookingPageContent({ tenant }: BookingPageContentProps) {
             dateKey={dateKey}
             startTime={startTime}
             customerEmail={confirmedEmail}
+            bookingId={confirmedBookingId}
             checkInToken={checkInToken}
             onNewBooking={handleNewBooking}
           />

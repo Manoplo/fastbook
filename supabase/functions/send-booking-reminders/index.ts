@@ -7,6 +7,7 @@ import {
   extractBearerToken,
   formatBookingDateLabel,
   formatBookingTimeLabel,
+  publicBookingManagePath,
 } from './utils.ts'
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
@@ -142,6 +143,10 @@ async function sendReminderEmail(input: {
     row.tenant_slug,
     row.check_in_token,
   )}`
+  const manageUrl = `${input.appOrigin}${publicBookingManagePath(
+    row.tenant_slug,
+    row.id,
+  )}`
 
   const dataUrl = await QRCode.toDataURL(checkInUrl, {
     width: 256,
@@ -160,6 +165,7 @@ async function sendReminderEmail(input: {
     dateLabel: formatBookingDateLabel(row.booking_date),
     timeLabel: formatBookingTimeLabel(row.start_time),
     checkInUrl,
+    manageUrl,
   })
 
   const resendResponse = await fetch(RESEND_API_URL, {

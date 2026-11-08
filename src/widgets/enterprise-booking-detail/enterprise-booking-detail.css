@@ -1,0 +1,98 @@
+.enterprise-booking-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0 0 2rem;
+}
+
+.enterprise-booking-detail--status {
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
+
+.enterprise-booking-detail__back {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fb-primary);
+}
+
+.enterprise-booking-detail__title {
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.enterprise-booking-detail__subtitle {
+  margin-top: 0.35rem;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--fb-on-surface-variant);
+}
+
+.enterprise-booking-detail__panel {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: var(--fb-surface-container-lowest);
+  box-shadow: var(--fb-shadow-sm);
+}
+
+.enterprise-booking-detail__panel-title {
+  margin: 0 0 1rem;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 700;
+}
+
+.enterprise-booking-detail__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+  font-size: 13px;
+  color: var(--fb-on-surface-variant);
+}
+
+.enterprise-booking-detail__field input,
+.enterprise-booking-detail__field select {
+  height: 2.75rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--fb-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--fb-surface);
+  color: var(--fb-on-surface);
+  font: inherit;
+}
+
+.enterprise-booking-detail__schedule {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 960px) {
+  .enterprise-booking-detail__schedule {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.enterprise-booking-detail__save {
+  align-self: flex-start;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: var(--fb-primary);
+  color: var(--fb-on-primary);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.enterprise-booking-detail__save:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

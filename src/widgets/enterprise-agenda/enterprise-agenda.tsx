@@ -10,6 +10,7 @@ import { ChevronRightIcon } from '@components/icons/chevron-right-icon'
 import { PaymentsIcon } from '@components/icons/payments-icon'
 import { ScheduleIcon } from '@components/icons/schedule-icon'
 import { listTenantAvailability } from '@src/lib/tenant-availability'
+import { enterpriseAgendaBookingPath } from '@src/lib/enterprise-dashboard-paths'
 import { listTenantBookingsInRange } from '@src/lib/tenant-bookings'
 import type { EnterpriseDashboardOutletContext } from '@src/pages/enterprise-dashboard/enterprise-dashboard.types'
 import { AgendaBookingCard } from './agenda-booking-card/agenda-booking-card'
@@ -297,7 +298,10 @@ export function EnterpriseAgenda() {
                 <ul className="enterprise-agenda__booking-list">
                   {SAMPLE_AGENDA_BOOKINGS.map((booking) => (
                     <li key={booking.id}>
-                      <AgendaBookingCard booking={toAgendaBookingCard(booking, now, tenant.name)} />
+                      <AgendaBookingCard
+                        booking={toAgendaBookingCard(booking, now, tenant.name)}
+                        detailHref={enterpriseAgendaBookingPath(tenant.slug, booking.id)}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -316,7 +320,10 @@ export function EnterpriseAgenda() {
                 <ul className="enterprise-agenda__booking-list">
                   {filteredBookings.map((booking) => (
                     <li key={booking.id}>
-                      <AgendaBookingCard booking={booking} />
+                      <AgendaBookingCard
+                        booking={booking}
+                        detailHref={enterpriseAgendaBookingPath(tenant.slug, booking.id)}
+                      />
                     </li>
                   ))}
                 </ul>

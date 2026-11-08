@@ -101,6 +101,20 @@
   text-align: right;
 }
 
+.booking-confirmation__manage {
+  margin-top: 1.25rem;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--fb-on-surface-variant);
+}
+
+.booking-confirmation__manage-link {
+  color: var(--fb-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .booking-confirmation__button {
   margin-top: 1.75rem;
   height: 3rem;

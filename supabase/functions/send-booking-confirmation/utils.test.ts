@@ -5,6 +5,7 @@ import {
   extractBookingLookup,
   formatBookingTimeLabel,
   isAuthorized,
+  publicBookingManagePath,
 } from './utils.ts'
 import { buildTenantBookingNotificationEmail } from './email.ts'
 
@@ -53,6 +54,10 @@ Deno.test('bookingCheckInPath matches FE shape', () => {
 
 Deno.test('enterpriseAgendaPath matches FE shape', () => {
   assertEquals(enterpriseAgendaPath('manoplo'), '/enterprise/manoplo/agenda')
+})
+
+Deno.test('publicBookingManagePath matches FE shape', () => {
+  assertEquals(publicBookingManagePath('manoplo', 'booking-1'), '/manoplo/booking-1')
 })
 
 Deno.test('buildTenantBookingNotificationEmail includes contact + agenda', () => {

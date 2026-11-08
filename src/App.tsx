@@ -5,6 +5,7 @@ import { RequireAuth } from "@components/require-auth/require-auth";
 import { AuthSessionProvider } from "@src/providers/auth-session-provider";
 import { BookingPage } from "@src/pages/booking/booking";
 import { EnterpriseAgendaPage } from "@src/pages/enterprise-agenda/enterprise-agenda";
+import { EnterpriseBookingDetailPage } from "@src/pages/enterprise-booking-detail/enterprise-booking-detail";
 import { EnterpriseCheckEmailPage } from "@src/pages/enterprise-check-email/enterprise-check-email";
 import { EnterpriseDashboardPage } from "@src/pages/enterprise-dashboard/enterprise-dashboard";
 import { EnterpriseLoginPage } from "@src/pages/enterprise-login/enterprise-login";
@@ -12,6 +13,7 @@ import { EnterpriseMetricsPage } from "@src/pages/enterprise-metrics/enterprise-
 import { EnterprisePersonalizationPage } from "@src/pages/enterprise-personalization/enterprise-personalization";
 import { EnterpriseSchedulesPage } from "@src/pages/enterprise-schedules/enterprise-schedules";
 import { EnterpriseSettingsPage } from "@src/pages/enterprise-settings/enterprise-settings";
+import { ManageBookingPage } from "@src/pages/manage-booking/manage-booking";
 import { MarketingRedirect } from "@components/marketing-redirect/marketing-redirect";
 import {
   ENTERPRISE_CHECK_EMAIL_PATH,
@@ -36,11 +38,13 @@ export default function App() {
           >
             <Route index element={<Navigate to="agenda" replace />} />
             <Route path="agenda" element={<EnterpriseAgendaPage />} />
+            <Route path="agenda/:bookingId" element={<EnterpriseBookingDetailPage />} />
             <Route path="schedules" element={<EnterpriseSchedulesPage />} />
             <Route path="metrics" element={<EnterpriseMetricsPage />} />
             <Route path="personalization" element={<EnterprisePersonalizationPage />} />
             <Route path="settings" element={<EnterpriseSettingsPage />} />
           </Route>
+          <Route path="/:tenantSlug/:bookingId" element={<ManageBookingPage />} />
           <Route path="/:tenantSlug" element={<BookingPage />} />
         </Routes>
       </AuthSessionProvider>

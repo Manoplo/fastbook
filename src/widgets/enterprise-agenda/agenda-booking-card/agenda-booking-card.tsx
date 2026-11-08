@@ -1,4 +1,5 @@
 import classNames from 'classnames'
+import { Link } from 'react-router-dom'
 import { AccountCircleIcon } from '@components/icons/account-circle-icon'
 import { CheckIcon } from '@components/icons/check-icon'
 import { MailIcon } from '@components/icons/mail-icon'
@@ -13,7 +14,7 @@ import {
 } from '../enterprise-agenda.utils'
 import './agenda-booking-card.css'
 
-export function AgendaBookingCard({ booking }: AgendaBookingCardProps) {
+export function AgendaBookingCard({ booking, detailHref }: AgendaBookingCardProps) {
   const isLive = booking.uiStatus === 'in_progress'
   const whatsapp = booking.customerPhone
     ? whatsappHref(booking.customerPhone)
@@ -97,6 +98,11 @@ export function AgendaBookingCard({ booking }: AgendaBookingCardProps) {
           </div>
 
           <div className="agenda-booking-card__actions">
+            {detailHref ? (
+              <Link className="agenda-booking-card__action" to={detailHref}>
+                Detalle
+              </Link>
+            ) : null}
             {whatsapp ? (
               <a
                 className="agenda-booking-card__action"

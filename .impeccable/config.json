@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-11-08T17:32:37.396Z",
+        "reason": "Email HTML stacks use Arial/Helvetica for client compatibility; intentional for transactional mail."
+      }
+    ]
+  }
+}

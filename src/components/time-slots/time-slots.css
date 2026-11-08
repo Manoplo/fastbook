@@ -119,7 +119,7 @@
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.time-slots__slot:hover:not(.time-slots__slot--selected) {
+.time-slots__slot:hover:not(.time-slots__slot--selected):not(:disabled) {
   background: var(--fb-surface-container);
 }
 
@@ -127,6 +127,19 @@
   background: var(--fb-primary);
   color: var(--fb-on-primary);
   box-shadow: var(--fb-shadow-sm);
+}
+
+.time-slots__slot--occupied,
+.time-slots__slot:disabled {
+  background: var(--fb-surface-container);
+  color: color-mix(in srgb, var(--fb-on-surface-variant) 55%, transparent);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.72;
+}
+
+.time-slots__slot--occupied .time-slots__slot-dot {
+  background: var(--fb-outline);
 }
 
 .time-slots__slot-dot {

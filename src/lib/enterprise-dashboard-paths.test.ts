@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  enterpriseAgendaBookingPath,
   enterpriseDashboardPath,
   isEnterpriseDashboardSection,
 } from './enterprise-dashboard-paths'
@@ -12,6 +13,14 @@ describe('enterpriseDashboardPath', () => {
   it('builds a section path', () => {
     expect(enterpriseDashboardPath('demo-salon', 'settings')).toBe(
       '/enterprise/demo-salon/settings',
+    )
+  })
+})
+
+describe('enterpriseAgendaBookingPath', () => {
+  it('builds booking detail path', () => {
+    expect(enterpriseAgendaBookingPath('demo-salon', 'b1')).toBe(
+      '/enterprise/demo-salon/agenda/b1',
     )
   })
 })
